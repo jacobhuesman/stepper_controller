@@ -1,5 +1,6 @@
-# Other
+# TrueStudio Stuff
 Debug/
+.metadata/
 
 # Prerequisites
 *.d
