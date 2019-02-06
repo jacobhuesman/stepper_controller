@@ -78,6 +78,16 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define DIR_Pin GPIO_PIN_0
+#define DIR_GPIO_Port GPIOA
+#define STEP_Pin GPIO_PIN_1
+#define STEP_GPIO_Port GPIOA
+#define DM0_Pin GPIO_PIN_2
+#define DM0_GPIO_Port GPIOA
+#define DM1_Pin GPIO_PIN_3
+#define DM1_GPIO_Port GPIOA
+#define DM2_Pin GPIO_PIN_4
+#define DM2_GPIO_Port GPIOA
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
