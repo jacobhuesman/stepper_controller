@@ -28,7 +28,9 @@ SOFTWARE.
 */
 
 /* Includes */
+#include <itimer.h>
 #include "stm32l4xx.h"
+#include "gpio.h"
 
 /* Private macro */
 /* Private variables */
@@ -57,10 +59,14 @@ int main(void)
   */
 
   /* TODO - Add your application code here */
+  GPIO::initialize();
+  GPIO led(LED_GPIO_Port, LED_Pin, GPIO_MODE_OUTPUT_PP);
+  led.on();
+  //ITimer tim6(TIM6, 0, 0);
 
   /* Infinite loop */
   while (1)
   {
-	i++;
+    i++;
   }
 }
