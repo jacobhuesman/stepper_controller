@@ -29,13 +29,14 @@
 class GPIO
 {
 public:
-  static void initialize();
+  static void setup();
   GPIO(GPIO_TypeDef* port, uint16_t pin, uint32_t mode, uint32_t speed = GPIO_SPEED_FREQ_LOW, uint32_t pull = GPIO_NOPULL);
-	void on();
+  void init();
+  void on();
 	void off();
   void set(bool value);
 	void toggle();
 private:
+	GPIO_InitTypeDef config;
 	GPIO_TypeDef* port;
-	uint16_t pin;
 };

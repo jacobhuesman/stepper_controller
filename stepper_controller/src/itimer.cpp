@@ -1,25 +1,49 @@
 #include <itimer.h>
 #include <stdexcept>
 
-ITimer::ITimer(TIM_TypeDef *instance, uint32_t prescaler, uint32_t period)
-{
-	TIM_MasterConfigTypeDef sMasterConfig = {0};
 
-	timer_handle.Instance = instance;
-	timer_handle.Init.Prescaler = prescaler;
-	timer_handle.Init.CounterMode = TIM_COUNTERMODE_UP;
-	timer_handle.Init.Period = period;
-	timer_handle.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-	if (HAL_TIM_Base_Init(&timer_handle) != HAL_OK)
+ITimer::ITimer(TIM_TypeDef *instance)
+{
+	handle.Instance = instance;
+}
+
+void ITimer::init(uint32_t prescaler, uint32_t period)
+	{
+  // Configure timer
+	TIM_MasterConfigTypeDef sMasterConfig = {0};
+	handle.Init.Prescaler = prescaler;
+	handle.Init.CounterMode = TIM_COUNTERMODE_UP;
+	handle.Init.Period = period;
+	handle.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+	if (HAL_TIM_Base_Init(&handle) != HAL_OK)
 	{
 		throw(std::runtime_error("Invalid timer handle"));
 	}
 	sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
 	sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-	if (HAL_TIMEx_MasterConfigSynchronization(&timer_handle, &sMasterConfig) != HAL_OK)
+	if (HAL_TIMEx_MasterConfigSynchronization(&handle, &sMasterConfig) != HAL_OK)
 	{
     throw(std::runtime_error("Initialization failed"));
 	}
+
+	// Enable interrupts
+  if(handle.Instance == TIM6)
+  {
+    //ITimer::timer6 = this;
+    __HAL_RCC_TIM6_CLK_ENABLE();
+    HAL_NVIC_SetPriority(TIM6_DAC_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(TIM6_DAC_IRQn);
+  }
+  else if(handle.Instance == TIM7)
+  {
+    __HAL_RCC_TIM7_CLK_ENABLE();
+    HAL_NVIC_SetPriority(TIM7_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(TIM7_IRQn);
+  }
+
+  // Enable timer
+  handle.Instance->CR1 |= TIM_CR1_CEN;
+  handle.Instance->DIER |= TIM_DIER_UIE;
 }
 
 /* TIM6 init function */

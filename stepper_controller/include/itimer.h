@@ -1,11 +1,15 @@
+
 #include "stm32l4xx_hal.h"
 #include "stm32l4xx_hal_tim_ex.h"
+
+
 
 class ITimer
 {
 public:
-	ITimer(TIM_TypeDef *instance, uint32_t prescaler,uint32_t period);
-	TIM_HandleTypeDef timer_handle;
+  ITimer(TIM_TypeDef *instance);
+	void init(uint32_t prescaler,uint32_t period);
+	TIM_HandleTypeDef handle;
 };
 
 void MX_TIM6_Init(void);
