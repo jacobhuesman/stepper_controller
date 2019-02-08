@@ -34,7 +34,7 @@ int main(void)
   HAL_Init();
   GPIO::setup();
   led.init();
-  tim7.init(0, 255);
+  tim7.init(0, 0xFF);
   stepper.init();
   stepper.enable();
 

@@ -51,7 +51,7 @@ void Stepper::init()
 
   // Set values
   dm0.setHigh();
-  dm1.setLow();
+  dm1.setHigh();
   dm2.setHigh();
   rst.setHigh();
   en.setLow();
