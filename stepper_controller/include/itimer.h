@@ -1,7 +1,8 @@
+#ifndef ITIMER_H
+#define ITIMER_H
 
 #include "stm32l4xx_hal.h"
 #include "stm32l4xx_hal_tim_ex.h"
-
 
 
 class ITimer
@@ -14,3 +15,5 @@ public:
 
 void MX_TIM6_Init(void);
 void MX_TIM7_Init(void);
+
+#endif // ITIMER_H

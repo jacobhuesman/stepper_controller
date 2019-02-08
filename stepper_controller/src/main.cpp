@@ -2,11 +2,13 @@
 #include <stdexcept>
 #include "stm32l4xx.h"
 #include "gpio.h"
+#include <stepper.h>
 
 // Global variables
 CAN_HandleTypeDef hcan1;
 GPIO led(LED_GPIO_Port, LED_Pin, GPIO_MODE_OUTPUT_PP);
 ITimer tim7(TIM7);
+Stepper stepper;
 
 // Function prototypes
 void SystemClock_Config(void);
@@ -21,6 +23,7 @@ extern "C" void TIM7_IRQHandler(void)
 {
   HAL_TIM_IRQHandler(&tim7.handle);
   led.toggle();
+  stepper.step();
 }
 
 // Program
@@ -31,7 +34,10 @@ int main(void)
   HAL_Init();
   GPIO::setup();
   led.init();
-  tim7.init(0xF, 0xFFFF);
+  tim7.init(0, 255);
+  stepper.init();
+  stepper.enable();
+
 
   /* Infinite loop */
   while (1);

@@ -32,15 +32,25 @@ void GPIO::off()
   this->set(false);
 }
 
+void GPIO::setLow()
+{
+  this->set(true);
+}
+
+void GPIO::setHigh()
+{
+  this->set(false);
+}
+
 void GPIO::set(bool value)
 {
 	if (value)
 	{
-		HAL_GPIO_WritePin(port, config.Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(port, config.Pin, GPIO_PIN_RESET);
 	}
 	else
 	{
-		HAL_GPIO_WritePin(port, config.Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(port, config.Pin, GPIO_PIN_SET);
 	}
 }
 
