@@ -7,9 +7,9 @@
 class Encoder
 {
 public:
-  Encoder();
+  Encoder(TIM_HandleTypeDef *htim1);
   void init();
-  TIM_HandleTypeDef htim1;
+  TIM_HandleTypeDef *htim1;
 };
 
 #endif // ENCODER_H

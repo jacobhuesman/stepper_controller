@@ -78,30 +78,36 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define STP_FLT_Pin GPIO_PIN_0
+#define MCO_Pin GPIO_PIN_0
+#define MCO_GPIO_Port GPIOA
+#define VCP_TX_Pin GPIO_PIN_2
+#define VCP_TX_GPIO_Port GPIOA
+#define STP_FLT_Pin GPIO_PIN_3
 #define STP_FLT_GPIO_Port GPIOA
-#define STP_EN_Pin GPIO_PIN_1
+#define STP_EN_Pin GPIO_PIN_4
 #define STP_EN_GPIO_Port GPIOA
-#define STP_RST_Pin GPIO_PIN_2
+#define STP_RST_Pin GPIO_PIN_5
 #define STP_RST_GPIO_Port GPIOA
-#define STP_DIR_Pin GPIO_PIN_3
-#define STP_DIR_GPIO_Port GPIOA
-#define STP_STEP_Pin GPIO_PIN_4
-#define STP_STEP_GPIO_Port GPIOA
-#define STP_DM0_Pin GPIO_PIN_5
+#define STP_DM0_Pin GPIO_PIN_6
 #define STP_DM0_GPIO_Port GPIOA
-#define STP_DM1_Pin GPIO_PIN_6
+#define STP_DM1_Pin GPIO_PIN_7
 #define STP_DM1_GPIO_Port GPIOA
-#define STP_DM2_Pin GPIO_PIN_7
-#define STP_DM2_GPIO_Port GPIOA
-#define ENC_B_Pin GPIO_PIN_0
-#define ENC_B_GPIO_Port GPIOB
-#define NUCLEO_LED_Pin GPIO_PIN_3
-#define NUCLEO_LED_GPIO_Port GPIOB
-#define ENC_X_Pin GPIO_PIN_6
-#define ENC_X_GPIO_Port GPIOB
-#define ENC_A_Pin GPIO_PIN_7
-#define ENC_A_GPIO_Port GPIOB
+#define STP_DM2_Pin GPIO_PIN_0
+#define STP_DM2_GPIO_Port GPIOB
+#define STP_DIR_Pin GPIO_PIN_1
+#define STP_DIR_GPIO_Port GPIOB
+#define ENC_IND_Pin GPIO_PIN_10
+#define ENC_IND_GPIO_Port GPIOA
+#define SWDIO_Pin GPIO_PIN_13
+#define SWDIO_GPIO_Port GPIOA
+#define SWCLK_Pin GPIO_PIN_14
+#define SWCLK_GPIO_Port GPIOA
+#define VCP_RX_Pin GPIO_PIN_15
+#define VCP_RX_GPIO_Port GPIOA
+#define LD3_Pin GPIO_PIN_3
+#define LD3_GPIO_Port GPIOB
+#define STP_STP_Pin GPIO_PIN_5
+#define STP_STP_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
