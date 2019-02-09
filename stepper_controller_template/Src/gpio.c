@@ -93,18 +93,18 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(STP_STEP_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PBPin PBPin PBPin */
-  GPIO_InitStruct.Pin = ENC_B_Pin|ENC_X_Pin|ENC_A_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
   /*Configure GPIO pin : PtPin */
   GPIO_InitStruct.Pin = NUCLEO_LED_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(NUCLEO_LED_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PtPin */
+  GPIO_InitStruct.Pin = ENC_X_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(ENC_X_GPIO_Port, &GPIO_InitStruct);
 
 }
 

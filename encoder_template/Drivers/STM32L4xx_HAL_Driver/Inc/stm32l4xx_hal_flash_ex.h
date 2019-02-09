@@ -1,17 +1,12 @@
-/* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file           : main.h
-  * @brief          : Header for main.c file.
-  *                   This file contains the common defines of the application.
+  * @file    stm32l4xx_hal_flash_ex.h
+  * @author  MCD Application Team
+  * @brief   Header file of FLASH HAL Extended module.
   ******************************************************************************
-  ** This notice applies to any and all portions of this file
-  * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether 
-  * inserted by the user or by software development tools
-  * are owned by their respective copyright owners.
+  * @attention
   *
-  * COPYRIGHT(c) 2019 STMicroelectronics
+  * <h2><center>&copy; COPYRIGHT(c) 2017 STMicroelectronics</center></h2>
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -37,75 +32,103 @@
   *
   ******************************************************************************
   */
-/* USER CODE END Header */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __MAIN_H
-#define __MAIN_H
+#ifndef __STM32L4xx_HAL_FLASH_EX_H
+#define __STM32L4xx_HAL_FLASH_EX_H
 
 #ifdef __cplusplus
-extern "C" {
+ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32l4xx_hal.h"
+#include "stm32l4xx_hal_def.h"
 
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
+/** @addtogroup STM32L4xx_HAL_Driver
+  * @{
+  */
 
-/* USER CODE END Includes */
+/** @addtogroup FLASHEx
+  * @{
+  */
 
 /* Exported types ------------------------------------------------------------*/
-/* USER CODE BEGIN ET */
-
-/* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
-/* USER CODE BEGIN EC */
+#if defined (FLASH_CFGR_LVEN)
+/** @addtogroup FLASHEx_Exported_Constants
+  * @{
+  */
+/** @defgroup FLASHEx_LVE_PIN_CFG FLASHEx LVE pin configuration
+  * @{
+  */
+#define FLASH_LVE_PIN_CTRL     0x00000000U       /*!< LVE FLASH pin controlled by power controller       */
+#define FLASH_LVE_PIN_FORCED   FLASH_CFGR_LVEN   /*!< LVE FLASH pin enforced to low (external SMPS used) */
+/**
+  * @}
+  */
 
-/* USER CODE END EC */
+/**
+  * @}
+  */
+#endif /* FLASH_CFGR_LVEN */
 
 /* Exported macro ------------------------------------------------------------*/
-/* USER CODE BEGIN EM */
 
-/* USER CODE END EM */
+/* Exported functions --------------------------------------------------------*/
+/** @addtogroup FLASHEx_Exported_Functions
+  * @{
+  */
 
-/* Exported functions prototypes ---------------------------------------------*/
-void Error_Handler(void);
+/* Extended Program operation functions  *************************************/
+/** @addtogroup FLASHEx_Exported_Functions_Group1
+  * @{
+  */
+HAL_StatusTypeDef HAL_FLASHEx_Erase(FLASH_EraseInitTypeDef *pEraseInit, uint32_t *PageError);
+HAL_StatusTypeDef HAL_FLASHEx_Erase_IT(FLASH_EraseInitTypeDef *pEraseInit);
+HAL_StatusTypeDef HAL_FLASHEx_OBProgram(FLASH_OBProgramInitTypeDef *pOBInit);
+void              HAL_FLASHEx_OBGetConfig(FLASH_OBProgramInitTypeDef *pOBInit);
+/**
+  * @}
+  */
 
-/* USER CODE BEGIN EFP */
+#if defined (FLASH_CFGR_LVEN)
+/** @addtogroup FLASHEx_Exported_Functions_Group2
+  * @{
+  */
+HAL_StatusTypeDef HAL_FLASHEx_ConfigLVEPin(uint32_t ConfigLVE);
+/**
+  * @}
+  */
+#endif /* FLASH_CFGR_LVEN */
 
-/* USER CODE END EFP */
+/**
+  * @}
+  */
 
-/* Private defines -----------------------------------------------------------*/
-#define STP_FLT_Pin GPIO_PIN_0
-#define STP_FLT_GPIO_Port GPIOA
-#define STP_EN_Pin GPIO_PIN_1
-#define STP_EN_GPIO_Port GPIOA
-#define STP_RST_Pin GPIO_PIN_2
-#define STP_RST_GPIO_Port GPIOA
-#define STP_DIR_Pin GPIO_PIN_3
-#define STP_DIR_GPIO_Port GPIOA
-#define STP_STEP_Pin GPIO_PIN_4
-#define STP_STEP_GPIO_Port GPIOA
-#define STP_DM0_Pin GPIO_PIN_5
-#define STP_DM0_GPIO_Port GPIOA
-#define STP_DM1_Pin GPIO_PIN_6
-#define STP_DM1_GPIO_Port GPIOA
-#define STP_DM2_Pin GPIO_PIN_7
-#define STP_DM2_GPIO_Port GPIOA
-#define NUCLEO_LED_Pin GPIO_PIN_3
-#define NUCLEO_LED_GPIO_Port GPIOB
-#define ENC_X_Pin GPIO_PIN_6
-#define ENC_X_GPIO_Port GPIOB
-/* USER CODE BEGIN Private defines */
+/* Private macros ------------------------------------------------------------*/
+/**
+  @cond 0
+  */
+#if defined (FLASH_CFGR_LVEN)
+#define IS_FLASH_LVE_PIN(CFG)  (((CFG) == FLASH_LVE_PIN_CTRL) || ((CFG) == FLASH_LVE_PIN_FORCED))
+#endif /* FLASH_CFGR_LVEN */
+/**
+  @endcond
+  */
 
-/* USER CODE END Private defines */
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __MAIN_H */
+#endif /* __STM32L4xx_HAL_FLASH_EX_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

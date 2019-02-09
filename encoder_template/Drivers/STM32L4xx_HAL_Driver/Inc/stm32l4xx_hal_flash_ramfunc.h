@@ -1,16 +1,12 @@
 /**
   ******************************************************************************
-  * File Name          : TIM.h
-  * Description        : This file provides code for the configuration
-  *                      of the TIM instances.
+  * @file    stm32l4xx_hal_flash_ramfunc.h
+  * @author  MCD Application Team
+  * @brief   Header file of FLASH RAMFUNC driver.
   ******************************************************************************
-  ** This notice applies to any and all portions of this file
-  * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether 
-  * inserted by the user or by software development tools
-  * are owned by their respective copyright owners.
+  * @attention
   *
-  * COPYRIGHT(c) 2019 STMicroelectronics
+  * <h2><center>&copy; COPYRIGHT(c) 2017 STMicroelectronics</center></h2>
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -35,48 +31,63 @@
   * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   *
   ******************************************************************************
-  */
+  */ 
+
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __tim_H
-#define __tim_H
+#ifndef __STM32L4xx_FLASH_RAMFUNC_H
+#define __STM32L4xx_FLASH_RAMFUNC_H
+
 #ifdef __cplusplus
  extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
+#include "stm32l4xx_hal_def.h"
 
-/* USER CODE BEGIN Includes */
+/** @addtogroup STM32L4xx_HAL_Driver
+  * @{
+  */
 
-/* USER CODE END Includes */
+/** @addtogroup FLASH_RAMFUNC
+  * @{
+  */ 
 
-extern TIM_HandleTypeDef htim1;
-extern TIM_HandleTypeDef htim6;
-extern TIM_HandleTypeDef htim7;
+/* Exported types ------------------------------------------------------------*/ 
+/* Exported macro ------------------------------------------------------------*/
+/* Exported functions --------------------------------------------------------*/
+/** @addtogroup FLASH_RAMFUNC_Exported_Functions
+  * @{
+  */
 
-/* USER CODE BEGIN Private defines */
+/** @addtogroup FLASH_RAMFUNC_Exported_Functions_Group1
+  * @{
+  */
+/* Peripheral Control functions  ************************************************/
+__RAM_FUNC  HAL_FLASHEx_EnableRunPowerDown(void);
+__RAM_FUNC  HAL_FLASHEx_DisableRunPowerDown(void);
+#if defined (STM32L4R5xx) || defined (STM32L4R7xx) || defined (STM32L4R9xx) || defined (STM32L4S5xx) || defined (STM32L4S7xx) || defined (STM32L4S9xx)
+__RAM_FUNC  HAL_FLASHEx_OB_DBankConfig(uint32_t DBankConfig);
+#endif
+/**
+  * @}
+  */ 
 
-/* USER CODE END Private defines */
+/**
+  * @}
+  */ 
 
-void MX_TIM1_Init(void);
-void MX_TIM6_Init(void);
-void MX_TIM7_Init(void);
+/**
+  * @}
+  */ 
 
-/* USER CODE BEGIN Prototypes */
-
-/* USER CODE END Prototypes */
+/**
+  * @}
+  */
 
 #ifdef __cplusplus
 }
 #endif
-#endif /*__ tim_H */
 
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
+#endif /* __STM32L4xx_FLASH_RAMFUNC_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
