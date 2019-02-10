@@ -123,6 +123,8 @@ int main(void)
   MX_CAN1_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
+  HAL_NVIC_SetPriority(EXTI1_IRQn, 2, 0);
+  HAL_NVIC_EnableIRQ(EXTI1_IRQn);
 
   /* USER CODE END 2 */
 
@@ -380,11 +382,17 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, STP_DM2_Pin|STP_DIR_Pin|LD3_Pin|STP_STP_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : STP_FLT_Pin ENC_IND_Pin */
-  GPIO_InitStruct.Pin = STP_FLT_Pin|ENC_IND_Pin;
+  /*Configure GPIO pin : ENC_IND_Pin */
+  GPIO_InitStruct.Pin = ENC_IND_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(ENC_IND_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : STP_FLT_Pin */
+  GPIO_InitStruct.Pin = STP_FLT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(STP_FLT_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : STP_EN_Pin STP_RST_Pin STP_DM0_Pin STP_DM1_Pin */
   GPIO_InitStruct.Pin = STP_EN_Pin|STP_RST_Pin|STP_DM0_Pin|STP_DM1_Pin;

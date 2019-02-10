@@ -1,7 +1,9 @@
-#include <encoder.h>
+#include "encoder.h"
+#include "main.h"
 #include <stdexcept>
 
-Encoder::Encoder(TIM_HandleTypeDef *htim1)
+Encoder::Encoder(TIM_HandleTypeDef *htim1) :
+  index(ENC_IND_GPIO_Port, ENC_IND_Pin, GPIO_MODE_IT_RISING)
 {
   this->htim1 = htim1;
 }
@@ -10,9 +12,9 @@ Encoder::Encoder(TIM_HandleTypeDef *htim1)
 
 void Encoder::init()
 {
+  // Configure pulse counting
   TIM_Encoder_InitTypeDef sConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
-
   htim1->Instance = TIM1;
   htim1->Init.Prescaler = 0;
   htim1->Init.CounterMode = TIM_COUNTERMODE_UP;
@@ -40,4 +42,8 @@ void Encoder::init()
   {
     Error_Handler();
   }
+
+  // Enable
+  index.init();
+  HAL_TIM_Encoder_Start(htim1, TIM_CHANNEL_ALL);
 }

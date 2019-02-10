@@ -96,7 +96,7 @@ void Error_Handler(void);
 #define STP_DM2_GPIO_Port GPIOB
 #define STP_DIR_Pin GPIO_PIN_1
 #define STP_DIR_GPIO_Port GPIOB
-#define ENC_IND_Pin GPIO_PIN_10
+#define ENC_IND_Pin GPIO_PIN_1
 #define ENC_IND_GPIO_Port GPIOA
 #define SWDIO_Pin GPIO_PIN_13
 #define SWDIO_GPIO_Port GPIOA

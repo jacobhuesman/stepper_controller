@@ -14,9 +14,8 @@ TIM_HandleTypeDef htim7;
 UART_HandleTypeDef huart2;
 GPIO led(LD3_GPIO_Port, LD3_Pin, GPIO_MODE_OUTPUT_PP);
 Service timer(&htim7, TIM7);
-//Stepper stepper;
 Encoder encoder(&htim1);
-
+Stepper stepper;
 
 // Function prototypes
 void SystemClock_Config(void);
@@ -30,8 +29,19 @@ void SystemClock_Config(void);
 extern "C" void TIM7_IRQHandler(void)
 {
   HAL_TIM_IRQHandler(timer.htim);
+  stepper.step();
+}
+
+/*extern "C" void HAL_GPIO_EXTI_Callback(uint16_t pin)
+{
+}*/
+
+extern "C" void EXTI1_IRQHandler()
+{
   led.toggle();
-  //stepper.step();
+  __HAL_GPIO_EXTI_CLEAR_FLAG(GPIO_PIN_1);
+  __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_1);
+
 }
 
 // Program
@@ -44,14 +54,14 @@ int main(void)
 
   // Initialize classes
   led.init();
-  timer.init(0xFF, 0xFFFF);
+  timer.init(0x0, 0x2FFF);
   encoder.init();
-  HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
+  stepper.init();
+  HAL_NVIC_SetPriority(EXTI1_IRQn, 2, 0);
+  HAL_NVIC_EnableIRQ(EXTI1_IRQn);
 
-  // Initialize stepper
-  /*stepper.init();
-  stepper.enable();*/
-
+  // Enable stepper motor
+  stepper.enable();
 
   /* Infinite loop */
   while (1);

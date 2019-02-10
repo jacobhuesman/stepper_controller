@@ -14,7 +14,7 @@ public:
   void ccw();
   void step();
 private:
-  GPIO flt, dm0, dm1, dm2, en, rst, dir, stp;
+  GPIO flt, dm0, dm1, dm2, rst, dir, stp, en;
 };
 
 #endif // STEPPER_H
