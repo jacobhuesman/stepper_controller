@@ -36,7 +36,7 @@ int main(void)
   //MX_USART2_UART_Init();
   MX_CAN_Init();
   //MX_TIM1_Init();
-  //MX_TIM2_Init();
+  MX_TIM2_Init();
   //MX_TIM6_Init();
   //MX_USART1_UART_Init();
   //MX_ADC1_Init();
@@ -44,13 +44,13 @@ int main(void)
 
   while (1)
   {
-    HAL_Delay(100);
+    /*HAL_Delay(100);
     TxData[0] = 0x12;
     TxData[1] = 0xAD;
     if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
     {
       Error_Handler();
-    }
+    }*/
   }
 }
 
@@ -174,12 +174,12 @@ extern "C" void MX_CAN_Init(void)
   /* USER CODE BEGIN CAN_Init 0 */
 
   /* USER CODE END CAN_Init 0 */
-
+  // 500 kHz = 32 MHz / 8 quanta / 8 prescale
   /* USER CODE BEGIN CAN_Init 1 */
 
   /* USER CODE END CAN_Init 1 */
   hcan.Instance = CAN;
-  hcan.Init.Prescaler = 8; // 500 kHz = 32 MHz / 8 quanta / 8 prescale
+  hcan.Init.Prescaler = 8;
   hcan.Init.Mode = CAN_MODE_NORMAL;
   hcan.Init.SyncJumpWidth = CAN_SJW_1TQ;
   hcan.Init.TimeSeg1 = CAN_BS1_5TQ;
@@ -298,8 +298,17 @@ extern "C" void MX_TIM2_Init(void)
 {
 
   /* USER CODE BEGIN TIM2_Init 0 */
-
-  /* USER CODE END TIM2_Init 0 */
+  /*
+   * Timing
+   * - TIM2 Base Freq  = 64 MHz
+   * - Max steps/rev   = 6400 stp/rev (200 bstp * 32 micstp)
+   * - Prescaled base  = 640 kHz (64 MHz / 100)
+   * - Max speed       = 100 rps (64 MHz / 100 / 6400)
+   * - Quanta          = 1.5625e-6 us
+   * - Starting rev/s  = 0.1 rev/s
+   * - Starting period = 2000 cc = 640 kHz / (0.1 * 6400) * 2
+   */
+    /* USER CODE END TIM2_Init 0 */
 
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
@@ -309,9 +318,9 @@ extern "C" void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 0;
+  htim2.Init.Prescaler = 100;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 0;
+  htim2.Init.Period = 2000;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -334,7 +343,7 @@ extern "C" void MX_TIM2_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 0;
+  sConfigOC.Pulse = htim2.Init.Period / 2;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
@@ -342,6 +351,10 @@ extern "C" void MX_TIM2_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN TIM2_Init 2 */
+  if (HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
   /* USER CODE END TIM2_Init 2 */
   HAL_TIM_MspPostInit(&htim2);
