@@ -40,18 +40,17 @@ int main(void)
   //MX_TIM6_Init();
   //MX_USART1_UART_Init();
   //MX_ADC1_Init();
-  HAL_Delay(1000);
 
-  TxData[0] = 0x12;
-  TxData[1] = 0xAD;
-  if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
-  {
-    Error_Handler();
-  }
 
   while (1)
   {
-
+    HAL_Delay(100);
+    TxData[0] = 0x12;
+    TxData[1] = 0xAD;
+    if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
+    {
+      Error_Handler();
+    }
   }
 }
 
@@ -180,12 +179,10 @@ extern "C" void MX_CAN_Init(void)
 
   /* USER CODE END CAN_Init 1 */
   hcan.Instance = CAN;
-  hcan.Init.Prescaler = 1;
+  hcan.Init.Prescaler = 8; // 500 kHz = 32 MHz / 8 quanta / 8 prescale
   hcan.Init.Mode = CAN_MODE_NORMAL;
   hcan.Init.SyncJumpWidth = CAN_SJW_1TQ;
-  //hcan.Init.TimeSeg1 = CAN_BS1_1TQ;
-  //hcan.Init.TimeSeg2 = CAN_BS2_1TQ;
-  hcan.Init.TimeSeg1 = CAN_BS1_7TQ;
+  hcan.Init.TimeSeg1 = CAN_BS1_5TQ;
   hcan.Init.TimeSeg2 = CAN_BS2_2TQ;
   hcan.Init.TimeTriggeredMode = DISABLE;
   hcan.Init.AutoBusOff = DISABLE;
