@@ -13,9 +13,9 @@ public:
   void setLow();
   void setHigh();
   void on();
-	void off();
+  void off();
   void set(bool value);
-	void toggle();
+  void toggle();
 private:
 	GPIO_InitTypeDef config;
 	GPIO_TypeDef* port;

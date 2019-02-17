@@ -1,5 +1,7 @@
 #include "../include/main.h"
+#include "stepper.h"
 
+// HAL handles
 ADC_HandleTypeDef hadc1;
 CAN_HandleTypeDef hcan;
 TIM_HandleTypeDef htim1;
@@ -8,6 +10,10 @@ TIM_HandleTypeDef htim6;
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
+// Objects
+Stepper stepper;
+
+// Temp config functions
 extern "C" void SystemClock_Config(void);
 extern "C" void MX_GPIO_Init(void);
 extern "C" void MX_USART2_UART_Init(void);
@@ -18,6 +24,7 @@ extern "C" void MX_TIM6_Init(void);
 extern "C" void MX_USART1_UART_Init(void);
 extern "C" void MX_ADC1_Init(void);
 
+// Temp CAN stuff
 uint8_t ubKeyNumber = 0x0;
 CAN_TxHeaderTypeDef   TxHeader;
 CAN_RxHeaderTypeDef   RxHeader;
@@ -27,11 +34,9 @@ uint32_t              TxMailbox;
 
 int main(void)
 {
-
+  // Initialize hardware
   HAL_Init();
-
   SystemClock_Config();
-
   MX_GPIO_Init();
   //MX_USART2_UART_Init();
   MX_CAN_Init();
@@ -41,16 +46,26 @@ int main(void)
   //MX_USART1_UART_Init();
   //MX_ADC1_Init();
 
+  // Initialize objects
+  stepper.init();
+  stepper.enable();
+  stepper.ccw();
+
+  if (HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
 
   while (1)
   {
-    /*HAL_Delay(100);
+    HAL_Delay(100);
     TxData[0] = 0x12;
     TxData[1] = 0xAD;
     if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
     {
       Error_Handler();
-    }*/
+    }
   }
 }
 
@@ -320,7 +335,7 @@ extern "C" void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 100;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 2000;
+  htim2.Init.Period = 40;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -351,10 +366,6 @@ extern "C" void MX_TIM2_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN TIM2_Init 2 */
-  if (HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1) != HAL_OK)
-  {
-    Error_Handler();
-  }
 
   /* USER CODE END TIM2_Init 2 */
   HAL_TIM_MspPostInit(&htim2);
@@ -479,15 +490,17 @@ extern "C" void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, STP_EN_Pin|STP_DM0_Pin|STP_DM1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, STP_DM0_Pin|STP_DM1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, STP_EN_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, STP_DM2_Pin|STP_DIR_Pin|STP_RST_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, STP_DM2_Pin|STP_DIR_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, STP_RST_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pins : STP_L0_Pin STP_L1_Pin */
   GPIO_InitStruct.Pin = STP_L0_Pin|STP_L1_Pin;
