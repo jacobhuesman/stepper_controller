@@ -43,7 +43,7 @@ int main(void)
   MX_CAN_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
-  //MX_TIM6_Init();
+  MX_TIM6_Init();
   //MX_USART1_UART_Init();
   //MX_ADC1_Init();
 
@@ -58,16 +58,7 @@ int main(void)
   }
 
 
-  while (1)
-  {
-    HAL_Delay(100);
-    TxData[0] = 0x12;
-    TxData[1] = 0xAD;
-    if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
-    {
-      Error_Handler();
-    }
-  }
+  while (1);
 }
 
 /**
@@ -391,22 +382,24 @@ extern "C" void MX_TIM6_Init(void)
 
   /* USER CODE END TIM6_Init 1 */
   htim6.Instance = TIM6;
-  htim6.Init.Prescaler = 0;
+  htim6.Init.Prescaler = 6400; // put quanta in ms
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim6.Init.Period = 0;
+  htim6.Init.Period = 20; // 50 Hz = 1 / 20 ms
   htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
   {
     Error_Handler();
   }
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  /*sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
   {
     Error_Handler();
-  }
+  }*/
   /* USER CODE BEGIN TIM6_Init 2 */
-
+  // Enable timer
+  HAL_TIM_Base_Start(&htim6);
+  HAL_TIM_Base_Start_IT(&htim6);
   /* USER CODE END TIM6_Init 2 */
 
 }
@@ -546,6 +539,17 @@ extern "C" void EXTI9_5_IRQHandler()
   __HAL_GPIO_EXTI_CLEAR_FLAG(GPIO_PIN_5);
   __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_5);
 }
+
+extern "C" void TIM6_DAC1_IRQHandler()
+{
+  TxData[0] = 0x12;
+  TxData[1] = 0xAD;
+  if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
 /* USER CODE END 4 */
 
 /**
