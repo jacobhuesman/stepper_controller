@@ -80,8 +80,10 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define MCO_Pin GPIO_PIN_0
-#define MCO_GPIO_Port GPIOF
+#define LED1_Pin GPIO_PIN_0
+#define LED1_GPIO_Port GPIOF
+#define LED2_Pin GPIO_PIN_1
+#define LED2_GPIO_Port GPIOF
 #define STP_STP_Pin GPIO_PIN_0
 #define STP_STP_GPIO_Port GPIOA
 #define TEMP_IN_Pin GPIO_PIN_1
@@ -116,18 +118,14 @@ void Error_Handler(void);
 #define VCP_RX_GPIO_Port GPIOA
 #define SWO_Pin GPIO_PIN_3
 #define SWO_GPIO_Port GPIOB
+#define LED0_Pin GPIO_PIN_4
+#define LED0_GPIO_Port GPIOB
 #define ENC_I_Pin GPIO_PIN_5
 #define ENC_I_GPIO_Port GPIOB
 #define ENC_TX_Pin GPIO_PIN_6
 #define ENC_TX_GPIO_Port GPIOB
 #define STP_RST_Pin GPIO_PIN_7
 #define STP_RST_GPIO_Port GPIOB
-#define LED0_Pin GPIO_PIN_4
-#define LED0_GPIO_Port GPIOB
-#define LED1_Pin GPIO_PIN_0
-#define LED1_GPIO_Port GPIOF
-#define LED2_Pin GPIO_PIN_1
-#define LED2_GPIO_Port GPIOF
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
