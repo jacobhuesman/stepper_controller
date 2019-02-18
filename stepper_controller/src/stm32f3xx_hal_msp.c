@@ -193,6 +193,15 @@ void HAL_CAN_MspInit(CAN_HandleTypeDef* hcan)
     GPIO_InitStruct.Alternate = GPIO_AF9_CAN;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+    /* CAN interrupt Init */
+    HAL_NVIC_SetPriority(CAN_TX_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(CAN_TX_IRQn);
+    HAL_NVIC_SetPriority(CAN_RX0_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(CAN_RX0_IRQn);
+    HAL_NVIC_SetPriority(CAN_RX1_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(CAN_RX1_IRQn);
+    HAL_NVIC_SetPriority(CAN_SCE_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(CAN_SCE_IRQn);
   /* USER CODE BEGIN CAN_MspInit 1 */
 
   /* USER CODE END CAN_MspInit 1 */
@@ -224,9 +233,61 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* hcan)
     */
     HAL_GPIO_DeInit(GPIOA, GPIO_PIN_11|GPIO_PIN_12);
 
+    /* CAN interrupt DeInit */
+    HAL_NVIC_DisableIRQ(CAN_TX_IRQn);
+    HAL_NVIC_DisableIRQ(CAN_RX0_IRQn);
+    HAL_NVIC_DisableIRQ(CAN_RX1_IRQn);
+    HAL_NVIC_DisableIRQ(CAN_SCE_IRQn);
   /* USER CODE BEGIN CAN_MspDeInit 1 */
 
   /* USER CODE END CAN_MspDeInit 1 */
+  }
+
+}
+
+/**
+* @brief RTC MSP Initialization
+* This function configures the hardware resources used in this example
+* @param hrtc: RTC handle pointer
+* @retval None
+*/
+void HAL_RTC_MspInit(RTC_HandleTypeDef* hrtc)
+{
+
+  if(hrtc->Instance==RTC)
+  {
+  /* USER CODE BEGIN RTC_MspInit 0 */
+
+  /* USER CODE END RTC_MspInit 0 */
+    /* Peripheral clock enable */
+    __HAL_RCC_RTC_ENABLE();
+  /* USER CODE BEGIN RTC_MspInit 1 */
+
+  /* USER CODE END RTC_MspInit 1 */
+  }
+
+}
+
+/**
+* @brief RTC MSP De-Initialization
+* This function freeze the hardware resources used in this example
+* @param hrtc: RTC handle pointer
+* @retval None
+*/
+
+void HAL_RTC_MspDeInit(RTC_HandleTypeDef* hrtc)
+{
+
+  if(hrtc->Instance==RTC)
+  {
+  /* USER CODE BEGIN RTC_MspDeInit 0 */
+
+  /* USER CODE END RTC_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_RTC_DISABLE();
+  /* USER CODE BEGIN RTC_MspDeInit 1 */
+
+  /* USER CODE END RTC_MspDeInit 1 */
   }
 
 }
@@ -261,6 +322,9 @@ void HAL_TIM_Encoder_MspInit(TIM_HandleTypeDef* htim_encoder)
     GPIO_InitStruct.Alternate = GPIO_AF6_TIM1;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+    /* TIM1 interrupt Init */
+    HAL_NVIC_SetPriority(TIM1_UP_TIM16_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(TIM1_UP_TIM16_IRQn);
   /* USER CODE BEGIN TIM1_MspInit 1 */
 
   /* USER CODE END TIM1_MspInit 1 */
@@ -290,13 +354,28 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* htim_base)
   }
   else if(htim_base->Instance==TIM6)
   {
+  /* USER CODE BEGIN TIM6_MspInit 0 */
+
+  /* USER CODE END TIM6_MspInit 0 */
+    /* Peripheral clock enable */
+    __HAL_RCC_TIM6_CLK_ENABLE();
+    /* TIM6 interrupt Init */
+    HAL_NVIC_SetPriority(TIM6_DAC1_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(TIM6_DAC1_IRQn);
+  /* USER CODE BEGIN TIM6_MspInit 1 */
+
+  /* USER CODE END TIM6_MspInit 1 */
+  }
+  else if(htim_base->Instance==TIM16)
+  {
   /* USER CODE BEGIN TIM16_MspInit 0 */
 
   /* USER CODE END TIM16_MspInit 0 */
     /* Peripheral clock enable */
-    __HAL_RCC_TIM6_CLK_ENABLE();
-    HAL_NVIC_SetPriority(TIM6_DAC1_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(TIM6_DAC1_IRQn);
+    __HAL_RCC_TIM16_CLK_ENABLE();
+    /* TIM16 interrupt Init */
+    HAL_NVIC_SetPriority(TIM1_UP_TIM16_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(TIM1_UP_TIM16_IRQn);
   /* USER CODE BEGIN TIM16_MspInit 1 */
 
   /* USER CODE END TIM16_MspInit 1 */
@@ -355,6 +434,15 @@ void HAL_TIM_Encoder_MspDeInit(TIM_HandleTypeDef* htim_encoder)
     */
     HAL_GPIO_DeInit(GPIOA, ENC_A_Pin|ENC_B_Pin);
 
+    /* TIM1 interrupt DeInit */
+  /* USER CODE BEGIN TIM1:TIM1_UP_TIM16_IRQn disable */
+    /**
+    * Uncomment the line below to disable the "TIM1_UP_TIM16_IRQn" interrupt
+    * Be aware, disabling shared interrupt may affect other IPs
+    */
+    /* HAL_NVIC_DisableIRQ(TIM1_UP_TIM16_IRQn); */
+  /* USER CODE END TIM1:TIM1_UP_TIM16_IRQn disable */
+
   /* USER CODE BEGIN TIM1_MspDeInit 1 */
 
   /* USER CODE END TIM1_MspDeInit 1 */
@@ -385,14 +473,38 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* htim_base)
   }
   else if(htim_base->Instance==TIM6)
   {
+  /* USER CODE BEGIN TIM6_MspDeInit 0 */
+
+  /* USER CODE END TIM6_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_TIM6_CLK_DISABLE();
+
+    /* TIM6 interrupt DeInit */
+    HAL_NVIC_DisableIRQ(TIM6_DAC1_IRQn);
+  /* USER CODE BEGIN TIM6_MspDeInit 1 */
+
+  /* USER CODE END TIM6_MspDeInit 1 */
+  }
+  else if(htim_base->Instance==TIM16)
+  {
   /* USER CODE BEGIN TIM16_MspDeInit 0 */
 
   /* USER CODE END TIM16_MspDeInit 0 */
     /* Peripheral clock disable */
-    __HAL_RCC_TIM6_CLK_DISABLE();
-  /* USER CODE BEGIN TIM6_MspDeInit 1 */
+    __HAL_RCC_TIM16_CLK_DISABLE();
 
-  /* USER CODE END TIM6_MspDeInit 1 */
+    /* TIM16 interrupt DeInit */
+  /* USER CODE BEGIN TIM16:TIM1_UP_TIM16_IRQn disable */
+    /**
+    * Uncomment the line below to disable the "TIM1_UP_TIM16_IRQn" interrupt
+    * Be aware, disabling shared interrupt may affect other IPs
+    */
+    /* HAL_NVIC_DisableIRQ(TIM1_UP_TIM16_IRQn); */
+  /* USER CODE END TIM16:TIM1_UP_TIM16_IRQn disable */
+
+  /* USER CODE BEGIN TIM16_MspDeInit 1 */
+
+  /* USER CODE END TIM16_MspDeInit 1 */
   }
 
 }

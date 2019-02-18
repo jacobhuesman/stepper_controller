@@ -4,9 +4,11 @@
 // HAL handles
 ADC_HandleTypeDef hadc1;
 CAN_HandleTypeDef hcan;
+RTC_HandleTypeDef hrtc;
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim6;
+TIM_HandleTypeDef htim16;
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
@@ -22,6 +24,8 @@ extern "C" void MX_CAN_Init(void);
 extern "C" void MX_TIM1_Init(void);
 extern "C" void MX_TIM2_Init(void);
 extern "C" void MX_TIM6_Init(void);
+extern "C" void MX_TIM16_Init(void);
+extern "C" void MX_RTC_Init(void);
 extern "C" void MX_USART1_UART_Init(void);
 extern "C" void MX_ADC1_Init(void);
 
@@ -43,7 +47,9 @@ int main(void)
   MX_CAN_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
-  MX_TIM6_Init();
+  //MX_TIM6_Init();
+  MX_TIM16_Init();
+  MX_RTC_Init();
   //MX_USART1_UART_Init();
   //MX_ADC1_Init();
 
@@ -76,9 +82,10 @@ void SystemClock_Config(void)
 
   /**Initializes the CPU, AHB and APB busses clocks
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL16;
@@ -99,10 +106,11 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_TIM1
-                              |RCC_PERIPHCLK_ADC12;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_RTC
+                              |RCC_PERIPHCLK_TIM1|RCC_PERIPHCLK_ADC12;
   PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK1;
   PeriphClkInit.Adc12ClockSelection = RCC_ADC12PLLCLK_DIV1;
+  PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
   PeriphClkInit.Tim1ClockSelection = RCC_TIM1CLK_HCLK;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
@@ -245,6 +253,40 @@ extern "C" void MX_CAN_Init(void)
   TxHeader.DLC = 2;
   TxHeader.TransmitGlobalTime = DISABLE;
   /* USER CODE END CAN_Init 2 */
+
+}
+
+/**
+  * @brief RTC Initialization Function
+  * @param None
+  * @retval None
+  */
+extern "C" void MX_RTC_Init(void)
+{
+
+  /* USER CODE BEGIN RTC_Init 0 */
+
+  /* USER CODE END RTC_Init 0 */
+
+  /* USER CODE BEGIN RTC_Init 1 */
+
+  /* USER CODE END RTC_Init 1 */
+  /**Initialize RTC Only
+  */
+  hrtc.Instance = RTC;
+  hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
+  hrtc.Init.AsynchPrediv = 127;
+  hrtc.Init.SynchPrediv = 255;
+  hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
+  hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+  hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+  if (HAL_RTC_Init(&hrtc) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN RTC_Init 2 */
+
+  /* USER CODE END RTC_Init 2 */
 
 }
 
@@ -408,6 +450,62 @@ extern "C" void MX_TIM6_Init(void)
 }
 
 /**
+  * @brief TIM16 Initialization Function
+  * @param None
+  * @retval None
+  */
+extern "C" void MX_TIM16_Init(void)
+{
+
+  /* USER CODE BEGIN TIM16_Init 0 */
+
+  /* USER CODE END TIM16_Init 0 */
+
+  TIM_IC_InitTypeDef sConfigIC = {0};
+
+  /* USER CODE BEGIN TIM16_Init 1 */
+
+  /* USER CODE END TIM16_Init 1 */
+  htim16.Instance = TIM16;
+  htim16.Init.Prescaler = 64;
+  htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim16.Init.Period = 20000;
+  htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim16.Init.RepetitionCounter = 0;
+  htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim16) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_IC_Init(&htim16) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
+  sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+  sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+  sConfigIC.ICFilter = 0;
+  if (HAL_TIM_IC_ConfigChannel(&htim16, &sConfigIC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIMEx_RemapConfig(&htim16, TIM_TIM16_RTC) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM16_Init 2 */
+  //HAL_TIM_Base_Start(&htim16);
+  //HAL_TIM_Base_Start_IT(&htim16);
+  if(HAL_TIM_IC_Start_IT(&htim16, TIM_CHANNEL_1) != HAL_OK)
+  {
+    /* Starting Error */
+    Error_Handler();
+  }
+  /* USER CODE END TIM16_Init 2 */
+
+}
+
+/**
   * @brief USART1 Initialization Function
   * @param None
   * @retval None
@@ -537,13 +635,36 @@ extern "C" void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 extern "C" void EXTI9_5_IRQHandler()
 {
-  led0.toggle();
+  //led0.toggle();
   htim1.Instance->CNT = 4096;
   __HAL_GPIO_EXTI_CLEAR_FLAG(GPIO_PIN_5);
   __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_5);
 }
 
-extern "C" void TIM6_DAC1_IRQHandler()
+uint32_t count = 0;
+
+extern "C" void tim16_it_handler(void)
+{
+  //led0.toggle();
+}
+
+// TODO calibrate HSI instead of counting LSI cycles
+extern "C" void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
+{
+  if (count++ == 790)
+  {
+    TxData[1]++;
+    if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
+    {
+      Error_Handler();
+    }
+    led0.toggle();
+    count = 0;
+  }
+}
+
+
+/*extern "C" void TIM6_DAC1_IRQHandler()
 {
   __HAL_TIM_CLEAR_FLAG(&htim6, TIM_FLAG_UPDATE);
   TxData[1]++;
@@ -552,7 +673,7 @@ extern "C" void TIM6_DAC1_IRQHandler()
     Error_Handler();
   }
   __HAL_TIM_CLEAR_IT(&htim6, TIM6_DAC1_IRQn);
-}
+}*/
 
 /* USER CODE END 4 */
 
