@@ -15,6 +15,8 @@ UART_HandleTypeDef huart2;
 // Objects
 Stepper stepper;
 GPIO led0(LED0_GPIO_Port, LED0_Pin);
+GPIO led1(LED1_GPIO_Port, LED1_Pin);
+GPIO led2(LED2_GPIO_Port, LED2_Pin);
 
 // Temp config functions
 extern "C" void SystemClock_Config(void);
@@ -51,7 +53,7 @@ int main(void)
   MX_TIM16_Init();
   MX_RTC_Init();
   //MX_USART1_UART_Init();
-  //MX_ADC1_Init();
+  MX_ADC1_Init();
 
   // Initialize objects
   stepper.init();
@@ -617,11 +619,18 @@ extern "C" void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+  // LEDs
   GPIO_InitStruct.Pin = LED0_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  GPIO_InitStruct.Pin = LED1_Pin|LED2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
   /*Configure GPIO pin : ENC_I_Pin */
   GPIO_InitStruct.Pin = ENC_I_Pin;
@@ -635,7 +644,7 @@ extern "C" void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 extern "C" void EXTI9_5_IRQHandler()
 {
-  //led0.toggle();
+  led2.toggle();
   htim1.Instance->CNT = 4096;
   __HAL_GPIO_EXTI_CLEAR_FLAG(GPIO_PIN_5);
   __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_5);
@@ -659,6 +668,7 @@ extern "C" void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
       Error_Handler();
     }
     led0.toggle();
+    led1.toggle();
     count = 0;
   }
 }
