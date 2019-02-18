@@ -12,6 +12,7 @@ UART_HandleTypeDef huart2;
 
 // Objects
 Stepper stepper;
+GPIO led0(LED0_GPIO_Port, LED0_Pin);
 
 // Temp config functions
 extern "C" void SystemClock_Config(void);
@@ -40,7 +41,7 @@ int main(void)
   MX_GPIO_Init();
   //MX_USART2_UART_Init();
   MX_CAN_Init();
-  //MX_TIM1_Init();
+  MX_TIM1_Init();
   MX_TIM2_Init();
   //MX_TIM6_Init();
   //MX_USART1_UART_Init();
@@ -274,7 +275,7 @@ extern "C" void MX_TIM1_Init(void)
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = 0;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 0;
+  htim1.Init.Period = 8192;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -299,7 +300,7 @@ extern "C" void MX_TIM1_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN TIM1_Init 2 */
-
+  HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
   /* USER CODE END TIM1_Init 2 */
 
 }
@@ -522,16 +523,29 @@ extern "C" void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+  GPIO_InitStruct.Pin = LED0_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
   /*Configure GPIO pin : ENC_I_Pin */
   GPIO_InitStruct.Pin = ENC_I_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(ENC_I_GPIO_Port, &GPIO_InitStruct);
-
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 2, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 }
 
 /* USER CODE BEGIN 4 */
-
+extern "C" void EXTI9_5_IRQHandler()
+{
+  led0.toggle();
+  htim1.Instance->CNT = 4096;
+  __HAL_GPIO_EXTI_CLEAR_FLAG(GPIO_PIN_5);
+  __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_5);
+}
 /* USER CODE END 4 */
 
 /**
