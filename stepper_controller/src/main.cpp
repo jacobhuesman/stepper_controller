@@ -57,6 +57,9 @@ int main(void)
     Error_Handler();
   }
 
+  TxData[0] = 0x12;
+  TxData[1] = 0x00;
+
 
   while (1);
 }
@@ -382,9 +385,9 @@ extern "C" void MX_TIM6_Init(void)
 
   /* USER CODE END TIM6_Init 1 */
   htim6.Instance = TIM6;
-  htim6.Init.Prescaler = 6400; // put quanta in ms
+  htim6.Init.Prescaler = 64; // put quanta in us
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim6.Init.Period = 20; // 50 Hz = 1 / 20 ms
+  htim6.Init.Period = 20000 - 350; // 50 Hz = 1 / 20 ms
   htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
   {
@@ -542,12 +545,13 @@ extern "C" void EXTI9_5_IRQHandler()
 
 extern "C" void TIM6_DAC1_IRQHandler()
 {
-  TxData[0] = 0x12;
-  TxData[1] = 0xAD;
+  __HAL_TIM_CLEAR_FLAG(&htim6, TIM_FLAG_UPDATE);
+  TxData[1]++;
   if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
   {
     Error_Handler();
   }
+  __HAL_TIM_CLEAR_IT(&htim6, TIM6_DAC1_IRQn);
 }
 
 /* USER CODE END 4 */
