@@ -17,17 +17,17 @@ void Stepper::init()
   dm0.set(GPIO::high);
   dm1.set(GPIO::high);
   dm2.set(GPIO::high);
-  rst.set(GPIO::high);
+  rst.set(GPIO::low);
 }
 
 void Stepper::enable()
 {
-  en.set(GPIO::low);
+  en.set(GPIO::high);
 }
 
 void Stepper::disable()
 {
-  en.set(GPIO::high);
+  en.set(GPIO::low);
 }
 
 void Stepper::cw()

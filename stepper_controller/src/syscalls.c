@@ -16,7 +16,7 @@
 **
 *****************************************************************************
 **
-** <h2><center>&copy; COPYRIGHT(c) 2014 Ac6</center></h2>
+** <h2><center>&copy0; COPYRIGHT(c) 2014 Ac6</center></h2>
 **
 ** Redistribution and use in source and binary forms, with or without modification,
 ** are permitted provided that the following conditions are met:
@@ -52,6 +52,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <sys/times.h>
+#include <stm32f3xx.h>
 
 
 /* Variables */
@@ -106,7 +107,7 @@ int _write(int file, char *ptr, int len)
 
 	for (DataIdx = 0; DataIdx < len; DataIdx++)
 	{
-		__io_putchar(*ptr++);
+    ITM_SendChar( *ptr++ );
 	}
 	return len;
 }
