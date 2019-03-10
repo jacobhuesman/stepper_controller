@@ -1,5 +1,7 @@
 #include "../include/main.h"
 #include "stepper.h"
+#define DEBUG_PRINTING 1
+#include "status.h"
 
 // HAL handles
 ADC_HandleTypeDef hadc1;
@@ -43,7 +45,7 @@ uint32_t              TxMailbox;
 int main(void)
 
 {
-  // Initialize hardware
+  printf("....\n"); // Sacrifice some periods to the gods of SWD
   HAL_Init();
   SystemClock_Config();
   MX_GPIO_Init();
@@ -56,10 +58,9 @@ int main(void)
   MX_RTC_Init();
   //MX_USART1_UART_Init();
   MX_ADC1_Init();
+  INFO("Initialized System");
 
   // Initialize objects
-  //printf("Test");
-  printf("A\n");
   stepper.init();
   stepper.enable();
   stepper.ccw();
@@ -103,7 +104,7 @@ void SystemClock_Config(void)
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
