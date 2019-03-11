@@ -2,6 +2,7 @@
 #include "stepper.h"
 #define DEBUG_PRINTING 1
 #include "status.h"
+#include "string.h"
 
 // HAL handles
 ADC_HandleTypeDef hadc1;
@@ -14,38 +15,35 @@ TIM_HandleTypeDef htim16;
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
-// Objects
+// Global Objects
 Stepper stepper;
 GPIO led0(LED0_GPIO_Port, LED0_Pin);
 GPIO led1(LED1_GPIO_Port, LED1_Pin);
 GPIO led2(LED2_GPIO_Port, LED2_Pin);
 
-// Config functions
-extern "C" void MX_GPIO_Init(void);
-extern "C" void MX_USART2_UART_Init(void);
-extern "C" void MX_RTC_Init(void);
-extern "C" void MX_USART1_UART_Init(void);
-extern "C" void MX_ADC1_Init(void);
-extern "C" int iprintf(const char *fmt, ...);
-
-// can.c
-extern "C" void MX_CAN_Init(void);
-
-// clocks.c
-extern "C" void SystemClock_Config(void);
-
-// timers.c
-extern "C" void MX_TIM1_Init(void);
-extern "C" void MX_TIM2_Init(void);
-extern "C" void MX_TIM6_Init(void);
-extern "C" void MX_TIM16_Init(void);
-
-// Temp CAN stuff
+// Global CAN stuff
 CAN_TxHeaderTypeDef   TxHeader;
 CAN_RxHeaderTypeDef   RxHeader;
 uint8_t               TxData[8];
 uint8_t               RxData[8];
 uint32_t              TxMailbox;
+uint32_t max;
+
+// Configuration functions
+extern "C" void MX_GPIO_Init(void);
+extern "C" void MX_USART2_UART_Init(void);
+extern "C" void MX_RTC_Init(void);
+extern "C" void MX_USART1_UART_Init(void);
+extern "C" int iprintf(const char *fmt, ...);
+// can.c
+extern "C" void MX_CAN_Init(void);
+// clocks.c
+extern "C" void SystemClock_Config(void);
+// timers.c
+extern "C" void MX_TIM1_Init(void);
+extern "C" void MX_TIM2_Init(void);
+extern "C" void MX_TIM6_Init(void);
+extern "C" void MX_TIM16_Init(void);
 
 int main(void)
 
@@ -67,15 +65,12 @@ int main(void)
   // Initialize objects
   stepper.init();
   stepper.enable();
-  stepper.ccw();
+  stepper.cw();
 
   if (HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1) != HAL_OK)
   {
     Error_Handler();
   }
-
-  TxData[0] = 0x12;
-  TxData[1] = 0x00;
 
 
   while (1);
@@ -101,11 +96,12 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
   }
 }
 
-// Just toggling for now
+// Hit index, reset counter
 extern "C" void EXTI9_5_IRQHandler()
 {
   led2.toggle();
-  htim1.Instance->CNT = 4096;
+  max = htim1.Instance->CNT;
+  htim1.Instance->CNT = 0;
   __HAL_GPIO_EXTI_CLEAR_FLAG(GPIO_PIN_5);
   __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_5);
 }
@@ -123,7 +119,8 @@ extern "C" void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
   if (count++ == 790)
   {
-    TxData[1]++;
+    //memcpy(TxData, (const void*)&htim1.Instance->CNT, 2);
+    memcpy(TxData, &max, 2);
     if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
     {
       Error_Handler();
