@@ -61,8 +61,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
   // Get Message
   if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK)
   {
-    /* Reception Error */
-    Error_Handler();
+    ERROR("Reception error");
   }
   led1.toggle();
 
