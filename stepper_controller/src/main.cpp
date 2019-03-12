@@ -16,7 +16,7 @@ UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 // Global Objects
-Stepper stepper;
+Stepper stepper(&htim1, &htim2);
 GPIO led0(LED0_GPIO_Port, LED0_Pin);
 GPIO led1(LED1_GPIO_Port, LED1_Pin);
 GPIO led2(LED2_GPIO_Port, LED2_Pin);
@@ -52,26 +52,18 @@ int main(void)
   HAL_Init();
   SystemClock_Config();
   GPIO::init();
-  //MX_USART2_UART_Init();
   MX_CAN_Init();
-  MX_TIM1_Init();
-  MX_TIM2_Init();
   MX_TIM6_Init();
-  MX_TIM16_Init();
-  MX_RTC_Init();
+  //MX_TIM16_Init();
+  //MX_RTC_Init();
   //MX_USART1_UART_Init();
+  //MX_USART2_UART_Init();
   INFO("Initialized System");
 
   // Initialize objects
   stepper.init();
-  stepper.enable();
   stepper.cw();
-
-  if (HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
+  stepper.enable();
 
   while (1);
 }
@@ -119,8 +111,8 @@ extern "C" void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
   if (count++ == 790)
   {
-    //memcpy(TxData, (const void*)&htim1.Instance->CNT, 2);
-    memcpy(TxData, &max, 2);
+    memcpy(TxData, (const void*)&htim1.Instance->CNT, 2);
+    //memcpy(TxData, &max, 2);
     if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
     {
       Error_Handler();
