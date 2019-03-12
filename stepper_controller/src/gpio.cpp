@@ -1,4 +1,5 @@
 #include <gpio.h>
+#include <status.h>
 
 extern ADC_HandleTypeDef hadc1;
 
@@ -52,14 +53,6 @@ void GPIO::init()
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : ENC_I_Pin */
-  GPIO_InitStruct.Pin = ENC_I_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(ENC_I_GPIO_Port, &GPIO_InitStruct);
-  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 2, 0);
-  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
-
   // ADC
   ADC_MultiModeTypeDef multimode = {0};
   ADC_ChannelConfTypeDef sConfig = {0};
@@ -81,13 +74,13 @@ void GPIO::init()
   hadc1.Init.Overrun = ADC_OVR_DATA_OVERWRITTEN;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
-    Error_Handler();
+    ERROR("Unable to initialize ADC");
   }
   // Configure the ADC multi-mode
   multimode.Mode = ADC_MODE_INDEPENDENT;
   if (HAL_ADCEx_MultiModeConfigChannel(&hadc1, &multimode) != HAL_OK)
   {
-    Error_Handler();
+    ERROR("Unable to initialize multi-mode");
   }
   // Configure regular channel
   sConfig.Channel = ADC_CHANNEL_2;
@@ -98,7 +91,7 @@ void GPIO::init()
   sConfig.Offset = 0;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
-    Error_Handler();
+    ERROR("Unable to initialize ADC channel");
   }
 }
 

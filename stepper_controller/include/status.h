@@ -34,7 +34,7 @@
 
 #define INFO(...)  PRINT("[INFO] ",    __VA_ARGS__);
 #define WARN(...)  PRINT("[WARNING] ", __VA_ARGS__);
-#define ERROR(...) PRINT("[ERROR] ",   __VA_ARGS__);
+#define ERROR(...) PRINT("[ERROR] ",   __VA_ARGS__); while(1);
 
 
 #ifndef STATUS

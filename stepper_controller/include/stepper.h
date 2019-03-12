@@ -14,7 +14,9 @@ public:
   void cw();
   void ccw();
   void step();
+  void zero();
   bool isZeroed();
+  uint16_t getTicks();
 private:
   TIM_HandleTypeDef *htim1, *htim2;
   GPIO l0, l1, dm0, dm1, dm2, rst, dir, en;

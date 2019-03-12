@@ -1,4 +1,19 @@
 #include "stepper.h"
+#include "status.h"
+
+extern Stepper stepper;
+extern GPIO led2;
+
+/*
+ * Interrupt handlers
+ */
+extern "C" void EXTI9_5_IRQHandler()
+{
+  led2.toggle();
+  stepper.zero();
+  __HAL_GPIO_EXTI_CLEAR_FLAG(GPIO_PIN_5);
+  __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_5);
+}
 
 Stepper::Stepper(TIM_HandleTypeDef *htim1, TIM_HandleTypeDef *htim2) :
   htim1(htim1),
@@ -15,6 +30,7 @@ Stepper::Stepper(TIM_HandleTypeDef *htim1, TIM_HandleTypeDef *htim2) :
 void Stepper::init()
 {
   // Initialize GPIO
+  // TODO move initialization for the rest of stepper GPIO here
   this->disable();
   this->cw();
   dm0.set(GPIO::high);
@@ -25,6 +41,15 @@ void Stepper::init()
   // Initialize state
   zeroed = false;
   max_velocity = 1.0f;
+
+  // Initialize index interrupt
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  GPIO_InitStruct.Pin = ENC_I_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(ENC_I_GPIO_Port, &GPIO_InitStruct);
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 2, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
   // Initialize encoder timer
   TIM_Encoder_InitTypeDef sConfig = {0};
@@ -47,14 +72,14 @@ void Stepper::init()
   sConfig.IC2Filter = 0;
   if (HAL_TIM_Encoder_Init(htim1, &sConfig) != HAL_OK)
   {
-    throw std::runtime_error("Unable to initialize timer 1");
+    ERROR("Unable to initialize timer 1");
   }
   sMasterConfig1.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig1.MasterOutputTrigger2 = TIM_TRGO2_RESET;
   sMasterConfig1.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(htim1, &sMasterConfig1) != HAL_OK)
   {
-    throw std::runtime_error("Unable to synchronize timer 1");
+    ERROR("Unable to synchronize timer 1");
   }
   HAL_TIM_Encoder_Start(htim1, TIM_CHANNEL_ALL);
 
@@ -82,22 +107,22 @@ void Stepper::init()
   htim2->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(htim2) != HAL_OK)
   {
-    throw std::runtime_error("Unable to initialize timer 2");
+    ERROR("Unable to initialize timer 2");
   }
   sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
   if (HAL_TIM_ConfigClockSource(htim2, &sClockSourceConfig) != HAL_OK)
   {
-    throw std::runtime_error("Unable to initialize timer 2 clock source");
+    ERROR("Unable to initialize timer 2 clock source");
   }
   if (HAL_TIM_PWM_Init(htim2) != HAL_OK)
   {
-    throw std::runtime_error("Unable to initialize timer 2 PWM");
+    ERROR("Unable to initialize timer 2 PWM");
   }
   sMasterConfig2.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig2.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(htim2, &sMasterConfig2) != HAL_OK)
   {
-    throw std::runtime_error("Unable to synchronize timer 2");
+    ERROR("Unable to synchronize timer 2");
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
   sConfigOC.Pulse = htim2->Init.Period / 2;
@@ -105,7 +130,7 @@ void Stepper::init()
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_PWM_ConfigChannel(htim2, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
   {
-    throw std::runtime_error("Unable to configure timer 2 PWM signal");
+    ERROR("Unable to configure timer 2 PWM signal");
   }
   HAL_TIM_MspPostInit(htim2);
 }
@@ -115,7 +140,7 @@ void Stepper::enable()
   en.set(GPIO::high);
   if (HAL_TIM_PWM_Start(htim2, TIM_CHANNEL_1) != HAL_OK)
   {
-    Error_Handler();
+    ERROR("Unable to start PWM for timer 2");
   }
 }
 
@@ -137,4 +162,14 @@ void Stepper::ccw()
 bool Stepper::isZeroed()
 {
   return zeroed;
+}
+
+void Stepper::zero()
+{
+  htim1->Instance->CNT = 0;
+}
+
+uint16_t Stepper::getTicks()
+{
+  return htim1->Instance->CNT;
 }
