@@ -18,7 +18,6 @@ GPIO    StateMachine::led     = GPIO(LED0_GPIO_Port, LED0_Pin);
 extern "C" void EXTI9_5_IRQHandler()
 {
   Stepper::zero();
-  Stepper::minLimit();
   __HAL_GPIO_EXTI_CLEAR_FLAG(GPIO_PIN_5);
   __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_5);
 }
@@ -28,9 +27,16 @@ extern "C" void TIM1_CC_IRQHandler(void)
   // Channel 3
   if(__HAL_TIM_GET_FLAG(&Stepper::htim1, TIM_FLAG_CC3) != RESET && __HAL_TIM_GET_IT_SOURCE(&Stepper::htim1, TIM_IT_CC3) != RESET)
   {
-    Stepper::maxLimit();
+    Stepper::ccwLimit();
     __HAL_TIM_CLEAR_FLAG(&Stepper::htim1, TIM_FLAG_CC3);
   }
+  // Channel 4
+  if(__HAL_TIM_GET_FLAG(&Stepper::htim1, TIM_FLAG_CC4) != RESET && __HAL_TIM_GET_IT_SOURCE(&Stepper::htim1, TIM_IT_CC4) != RESET)
+  {
+    Stepper::cwLimit();
+    __HAL_TIM_CLEAR_FLAG(&Stepper::htim1, TIM_FLAG_CC4);
+  }
+
 }
 
 extern "C" void TIM6_DAC1_IRQHandler()

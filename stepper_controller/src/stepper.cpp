@@ -1,5 +1,6 @@
-#include "stepper.h"
-#include "status.h"
+#include <stepper.h>
+#include <status.h>
+#include <config.h>
 #include <cmath>
 
 extern GPIO led2;
@@ -51,7 +52,7 @@ void Stepper::setupTimers()
     htim1.Instance = TIM1;
     htim1.Init.Prescaler = 0;
     htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim1.Init.Period = 8192*2;
+    htim1.Init.Period = TICKS_PER_REV*2;
     htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim1.Init.RepetitionCounter = 0;
     htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -83,20 +84,21 @@ void Stepper::setupTimers()
     sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
     sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
     // Output capture channel 3
-    sConfigOC.Pulse = 8192*3/4;
+    sConfigOC.Pulse = TICKS_PER_REV/2;
     if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
     {
       ERROR("Unable to configure timer 1 output capture channel 3");
     }
     // Output capture channel 4
-    sConfigOC.Pulse = 8192*3/2;
-    /*if (HAL_TIM_OC_ConfigChannel(htim1, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
+    sConfigOC.Pulse = TICKS_PER_REV*3/2;
+    if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
     {
       Error_Handler();
-    }*/
+    }
     HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
     HAL_TIM_OC_Start_IT(&htim1, TIM_CHANNEL_3);
-    //HAL_TIM_OC_Start_IT(&htim1, TIM_CHANNEL_4);
+    HAL_TIM_OC_Start_IT(&htim1, TIM_CHANNEL_4);
+    htim1.Instance->CNT = TICKS_PER_REV;
   }
 
   /*
@@ -218,9 +220,13 @@ bool Stepper::isZeroed()
 
 void Stepper::zero()
 {
-  //htim1.Instance->CR1 = htim1.Instance->CR1 & 0xFFFE;
-  htim1.Instance->CNT = 0;
-  //htim1.Instance->CR1 = htim1.Instance->CR1 | 0x0001;
+  if (!zeroed)
+  {
+    htim1.Instance->CCR3 = TICKS_PER_REV/8;
+    htim1.Instance->CCR4 = TICKS_PER_REV;
+    zeroed = true;
+  }
+  htim1.Instance->CNT = TICKS_PER_REV / 2;
 }
 
 uint16_t Stepper::getTicks()
@@ -269,7 +275,7 @@ void Stepper::setVelocity(float velocity)
   }
 }
 
-void Stepper::minLimit()
+void Stepper::ccwLimit()
 {
   if (scanning)
   {
@@ -285,7 +291,7 @@ void Stepper::minLimit()
   }
 }
 
-void Stepper::maxLimit()
+void Stepper::cwLimit()
 {
   if (scanning)
   {

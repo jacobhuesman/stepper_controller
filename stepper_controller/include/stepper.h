@@ -16,8 +16,8 @@ public:
   static void ccw();
   static void step();
   static void zero();
-  static void minLimit();
-  static void maxLimit();
+  static void ccwLimit();
+  static void cwLimit();
   static void setVelocity(float velocity);
   static bool isZeroed();
   static uint16_t getTicks();
