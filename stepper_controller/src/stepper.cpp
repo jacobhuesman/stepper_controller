@@ -22,7 +22,7 @@ bool Stepper::scanning;
 void Stepper::init()
 {
   // Initialize GPIO
-  // TODO move initialization for the rest of stepper GPIO here
+  setupGPIO();
   disable();
   cw();
   dm0.set(GPIO::high);
@@ -38,14 +38,7 @@ void Stepper::init()
 
   setupTimers();
 
-  // Initialize index interrupt
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-  GPIO_InitStruct.Pin = ENC_I_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(ENC_I_GPIO_Port, &GPIO_InitStruct);
-  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 2, 0);
-  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+  INFO("Stepper initialized")
 }
 
 void Stepper::setupTimers()
@@ -161,7 +154,37 @@ void Stepper::setupTimers()
 
 void Stepper::setupGPIO()
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
 
+  // Initialize index interrupt
+  GPIO_InitStruct.Pin = ENC_I_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(ENC_I_GPIO_Port, &GPIO_InitStruct);
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 2, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+
+  // Output pins
+  HAL_GPIO_WritePin(GPIOA, STP_DM0_Pin|STP_DM1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, STP_EN_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB, STP_DM2_Pin|STP_DIR_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, STP_RST_Pin, GPIO_PIN_SET);
+  GPIO_InitStruct.Pin = STP_EN_Pin|STP_DM0_Pin|STP_DM1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  GPIO_InitStruct.Pin = STP_DM2_Pin|STP_DIR_Pin|STP_RST_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  // Input pins
+  GPIO_InitStruct.Pin = STP_L0_Pin|STP_L1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 }
 
 void Stepper::enable()

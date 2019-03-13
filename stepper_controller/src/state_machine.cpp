@@ -44,10 +44,10 @@ extern "C" void TIM6_DAC1_IRQHandler()
 void StateMachine::init()
 {
   state = State::Disabled;
-  Stepper::init();
   Stepper::enable();
   //Stepper::setVelocity(-100);
   //setupTimer();
+  INFO("State machine initialized");
 }
 
 void StateMachine::setupTimer()

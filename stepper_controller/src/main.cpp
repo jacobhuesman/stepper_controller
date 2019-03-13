@@ -38,8 +38,9 @@ int main(void)
   SystemClock_Config();
   MX_CAN_Init();
   GPIO::init();
+  Stepper::init();
   StateMachine::init();
-  INFO("Initialized System");
+  INFO("Initialized system");
 
 
   // Start stepper
