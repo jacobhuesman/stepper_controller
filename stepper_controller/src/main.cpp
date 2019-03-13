@@ -3,6 +3,9 @@
 #include <stepper.h>
 #include <state_machine.h>
 
+#include <test.h>
+#include <tests/stepper_tests.h>
+
 // HAL handles
 ADC_HandleTypeDef hadc1;
 CAN_HandleTypeDef hcan;
@@ -29,6 +32,15 @@ extern "C" void MX_CAN_Init(void);             // can.c
 extern "C" void SystemClock_Config(void);      // clocks.c
 void errorHandler(std::exception &e);
 
+TEST_SUITE(main)
+TEST(Space Name)
+{
+}
+
+TEST(2)
+{
+}
+
 int main(void)
 
 {
@@ -36,19 +48,15 @@ int main(void)
   printf("....\n"); // Sacrifice some periods to the gods of SWD
   HAL_Init();
   SystemClock_Config();
-  MX_CAN_Init();
-  GPIO::init();
-  Stepper::init();
-  StateMachine::init();
+  //test_test1.test();
+  //MX_CAN_Init();
+  //GPIO::init();
+  //Stepper::init();
+  //StateMachine::init();
   INFO("Initialized system");
 
-
-  // Start stepper
-  /*
-  stepper.cw();
-  stepper.enable();
-  stepper.setVelocity(-100);
-  */
+  // Run tests
+  Test::runAll();
 
   while (1);
 }

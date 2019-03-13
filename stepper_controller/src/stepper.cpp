@@ -25,7 +25,7 @@ void Stepper::init()
   // Initialize GPIO
   setupGPIO();
   disable();
-  cw();
+  set(Stepper::cw);
   dm0.set(GPIO::high);
   dm1.set(GPIO::high);
   dm2.set(GPIO::high);
@@ -203,15 +203,18 @@ void Stepper::disable()
   en.set(GPIO::low);
 }
 
-void Stepper::cw()
+void Stepper::set(Direction direction)
 {
-  dir.set(GPIO::high);
+  if (direction == Stepper::cw)
+  {
+    dir.set(GPIO::high);
+  }
+  else if (direction == Stepper::ccw)
+  {
+    dir.set(GPIO::low);
+  }
 }
 
-void Stepper::ccw()
-{
-  dir.set(GPIO::low);
-}
 
 bool Stepper::isZeroed()
 {
@@ -265,40 +268,56 @@ void Stepper::setVelocity(float velocity)
     htim2.Instance->CR1 = htim2.Instance->CR1 | 0x0001;
     if (velocity_setpoint > 0.0f)
     {
-      cw();
+      set(Stepper::cw);
     }
     else
     {
-      ccw();
+      set(Stepper::ccw);
     }
 
   }
 }
 
-void Stepper::ccwLimit()
+float convertAngle(uint16_t tics)
 {
-  if (scanning)
+  return (float)tics * TICKS_PER_REV - 0.5f;
+}
+uint16_t convertAngle(float angle)
+{
+  return (uint16_t)((angle + 0.5f) / TICKS_PER_REV);
+}
+
+void Stepper::setLimit(Direction direction, float velocity)
+{
+  if (direction == Stepper::cw)
   {
-    if (velocity_setpoint < 0)
-    {
-      setVelocity(-velocity_setpoint);
-      led2.set(GPIO::low);
-    }
+
   }
   else
   {
-    setVelocity(0.0f);
+
   }
 }
 
-void Stepper::cwLimit()
+void Stepper::hitLimit(Direction direction)
 {
   if (scanning)
   {
-    if (velocity_setpoint >= 0)
+    if (direction == Stepper::cw)
     {
-      setVelocity(-velocity_setpoint);
-      led2.set(GPIO::high);
+      if (velocity_setpoint >= 0)
+      {
+        setVelocity(-velocity_setpoint);
+        led2.set(GPIO::high);
+      }
+    }
+    else
+    {
+      if (velocity_setpoint < 0)
+      {
+        setVelocity(-velocity_setpoint);
+        led2.set(GPIO::low);
+      }
     }
   }
   else

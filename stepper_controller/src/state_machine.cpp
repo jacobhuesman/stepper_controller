@@ -27,13 +27,13 @@ extern "C" void TIM1_CC_IRQHandler(void)
   // Channel 3
   if(__HAL_TIM_GET_FLAG(&Stepper::htim1, TIM_FLAG_CC3) != RESET && __HAL_TIM_GET_IT_SOURCE(&Stepper::htim1, TIM_IT_CC3) != RESET)
   {
-    Stepper::ccwLimit();
+    Stepper::hitLimit(Stepper::ccw);
     __HAL_TIM_CLEAR_FLAG(&Stepper::htim1, TIM_FLAG_CC3);
   }
   // Channel 4
   if(__HAL_TIM_GET_FLAG(&Stepper::htim1, TIM_FLAG_CC4) != RESET && __HAL_TIM_GET_IT_SOURCE(&Stepper::htim1, TIM_IT_CC4) != RESET)
   {
-    Stepper::cwLimit();
+    Stepper::hitLimit(Stepper::cw);
     __HAL_TIM_CLEAR_FLAG(&Stepper::htim1, TIM_FLAG_CC4);
   }
 

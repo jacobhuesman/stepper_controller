@@ -7,21 +7,28 @@
 class Stepper
 {
 public:
+  enum Direction
+  {
+    ccw,
+    cw
+  };
   static void init();
   static void setupTimers();
   static void setupGPIO();
   static void enable();
   static void disable();
-  static void cw();
-  static void ccw();
+  static void set(Direction direction);
+  static void setLimit(Direction direction, float angle);
   static void step();
   static void zero();
-  static void ccwLimit();
-  static void cwLimit();
+  static void hitLimit(Direction direction);
   static void setVelocity(float velocity);
   static bool isZeroed();
   static uint16_t getTicks();
   static float velocitySetpoint();
+  static float convertAngle(uint16_t tics);
+  static uint16_t convertAngle(float value);
+  static float convertVelocityTics(uint16_t tics);
 
   static TIM_HandleTypeDef htim1, htim2;
 
