@@ -1,5 +1,6 @@
 #include "stepper.h"
 #include "status.h"
+#include <cmath>
 
 extern Stepper stepper;
 extern GPIO led2;
@@ -9,11 +10,27 @@ extern GPIO led2;
  */
 extern "C" void EXTI9_5_IRQHandler()
 {
-  led2.toggle();
   stepper.zero();
+  stepper.minLimit();
   __HAL_GPIO_EXTI_CLEAR_FLAG(GPIO_PIN_5);
   __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_5);
 }
+
+extern "C" void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  if (htim->Instance == TIM1)
+  {
+    if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_3)
+    {
+      stepper.maxLimit();
+    }
+    else if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_4)
+    {
+      // TODO position setpoint
+    }
+  }
+}
+
 
 Stepper::Stepper(TIM_HandleTypeDef *htim1, TIM_HandleTypeDef *htim2) :
   htim1(htim1),
@@ -40,7 +57,9 @@ void Stepper::init()
 
   // Initialize state
   zeroed = false;
-  max_velocity = 1.0f;
+  scanning = true;
+  max_velocity = 100.0f;
+  velocity_setpoint = 100.0f;
 
   // Initialize index interrupt
   GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -54,6 +73,9 @@ void Stepper::init()
   // Initialize encoder timer
   TIM_Encoder_InitTypeDef sConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig1 = {0};
+  TIM_OC_InitTypeDef sConfigOC1CH3 = {0};
+  TIM_OC_InitTypeDef sConfigOC1CH4 = {0};
+  TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
   htim1->Instance = TIM1;
   htim1->Init.Prescaler = 0;
   htim1->Init.CounterMode = TIM_COUNTERMODE_UP;
@@ -81,7 +103,31 @@ void Stepper::init()
   {
     ERROR("Unable to synchronize timer 1");
   }
+  sConfigOC1CH3.OCMode = TIM_OCMODE_ACTIVE;
+  sConfigOC1CH3.Pulse = 8192*3/4;
+  sConfigOC1CH3.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC1CH3.OCNPolarity = TIM_OCNPOLARITY_HIGH;
+  sConfigOC1CH3.OCFastMode = TIM_OCFAST_DISABLE;
+  sConfigOC1CH3.OCIdleState = TIM_OCIDLESTATE_RESET;
+  sConfigOC1CH3.OCNIdleState = TIM_OCNIDLESTATE_RESET;
+  if (HAL_TIM_OC_ConfigChannel(htim1, &sConfigOC1CH3, TIM_CHANNEL_3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC1CH4.OCMode = TIM_OCMODE_ACTIVE;
+  sConfigOC1CH4.Pulse = 8192*3/2;
+  sConfigOC1CH4.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC1CH4.OCNPolarity = TIM_OCNPOLARITY_HIGH;
+  sConfigOC1CH4.OCFastMode = TIM_OCFAST_DISABLE;
+  sConfigOC1CH4.OCIdleState = TIM_OCIDLESTATE_RESET;
+  sConfigOC1CH4.OCNIdleState = TIM_OCNIDLESTATE_RESET;
+  /*if (HAL_TIM_OC_ConfigChannel(htim1, &sConfigOC1CH4, TIM_CHANNEL_4) != HAL_OK)
+  {
+    Error_Handler();
+  }*/
   HAL_TIM_Encoder_Start(htim1, TIM_CHANNEL_ALL);
+  HAL_TIM_OC_Start_IT(htim1, TIM_CHANNEL_3);
+  HAL_TIM_OC_Start_IT(htim1, TIM_CHANNEL_4);
 
 
   /* Initialize step timer
@@ -96,13 +142,13 @@ void Stepper::init()
    */
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig2 = {0};
-  TIM_OC_InitTypeDef sConfigOC = {0};
+  TIM_OC_InitTypeDef sConfigOC2 = {0};
 
   htim2->Instance = TIM2;
   htim2->Init.Prescaler = 100;
   htim2->Init.CounterMode = TIM_COUNTERMODE_UP;
   //htim2.Init.Period = 20;
-  htim2->Init.Period = 1000;
+  htim2->Init.Period = 100;
   htim2->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(htim2) != HAL_OK)
@@ -124,11 +170,11 @@ void Stepper::init()
   {
     ERROR("Unable to synchronize timer 2");
   }
-  sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = htim2->Init.Period / 2;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  if (HAL_TIM_PWM_ConfigChannel(htim2, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  sConfigOC2.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC2.Pulse = htim2->Init.Period / 2;
+  sConfigOC2.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC2.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(htim2, &sConfigOC2, TIM_CHANNEL_1) != HAL_OK)
   {
     ERROR("Unable to configure timer 2 PWM signal");
   }
@@ -172,4 +218,77 @@ void Stepper::zero()
 uint16_t Stepper::getTicks()
 {
   return htim1->Instance->CNT;
+}
+
+void Stepper::setVelocity(float velocity)
+{
+  // Threshold
+  if (velocity > max_velocity)
+  {
+    velocity_setpoint = max_velocity;
+  }
+  else if (velocity < -max_velocity)
+  {
+    velocity_setpoint = -max_velocity;
+  }
+  else
+  {
+    velocity_setpoint = velocity;
+  }
+
+  // Set
+  if (std::abs(velocity_setpoint) < 1e-6)
+  {
+    htim2->Instance->CR1 = htim1->Instance->CR1 & 0xFFFE;
+  }
+  else
+  {
+    // TODO some conversion, set direction
+    htim2->Instance->CR1 = htim1->Instance->CR1 & 0xFFFE;
+    htim2->Instance->ARR = (uint32_t) std::abs(velocity_setpoint);
+    htim2->Instance->CCR1 = (uint32_t) std::abs(velocity_setpoint/2.0f);
+    htim2->Instance->CNT = 0;
+    htim2->Instance->CR1 = htim1->Instance->CR1 | 0x0001;
+    if (velocity_setpoint > 0.0f)
+    {
+      this->cw();
+    }
+    else
+    {
+      this->ccw();
+    }
+
+  }
+}
+
+void Stepper::minLimit()
+{
+  if (stepper.scanning)
+  {
+    if (velocity_setpoint < 0)
+    {
+      setVelocity(-velocity_setpoint);
+      led2.set(GPIO::low);
+    }
+  }
+  else
+  {
+    setVelocity(0.0f);
+  }
+}
+
+void Stepper::maxLimit()
+{
+  if (stepper.scanning)
+  {
+    if (velocity_setpoint >= 0)
+    {
+      setVelocity(-velocity_setpoint);
+      led2.set(GPIO::high);
+    }
+  }
+  else
+  {
+    setVelocity(0.0f);
+  }
 }

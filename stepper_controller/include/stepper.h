@@ -17,11 +17,15 @@ public:
   void zero();
   bool isZeroed();
   uint16_t getTicks();
+  void setVelocity(float velocity);
+  float velocitySetpoint();
+  void minLimit();
+  void maxLimit();
 private:
   TIM_HandleTypeDef *htim1, *htim2;
   GPIO l0, l1, dm0, dm1, dm2, rst, dir, en;
-  float max_velocity; // rev/s
-  bool zeroed;
+  float velocity_setpoint, max_velocity; // rev/s
+  bool zeroed, scanning;
 };
 
 #endif // STEPPER_H

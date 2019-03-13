@@ -49,9 +49,11 @@ int main(void)
   state.init();
   INFO("Initialized System");
 
+
   // Start stepper
   stepper.cw();
   stepper.enable();
+  stepper.setVelocity(-100);
 
   while (1);
 }
@@ -64,6 +66,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
     ERROR("Reception error");
   }
   led1.toggle();
+  //stepper.setVelocity(100);
 
 
   /* Display LEDx */
