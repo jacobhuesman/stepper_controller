@@ -10,33 +10,31 @@
  */
 TIM_HandleTypeDef StateMachine::htim6;
 State   StateMachine::state;
-GPIO    StateMachine::led     = GPIO(LED0_GPIO_Port, LED0_Pin);
+GPIO    StateMachine::led = GPIO(LED0_GPIO_Port, LED0_Pin);
+
+// Global CAN stuff
+CAN_TxHeaderTypeDef   TxHeader;
+CAN_RxHeaderTypeDef   RxHeader;
+uint8_t               TxData[8];
+uint8_t               RxData[8];
+uint32_t              TxMailbox;
 
 /*
  * Interrupt handlers
  */
-extern "C" void EXTI9_5_IRQHandler()
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
-  Stepper::zero();
-  __HAL_GPIO_EXTI_CLEAR_FLAG(GPIO_PIN_5);
-  __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_5);
-}
-
-extern "C" void TIM1_CC_IRQHandler(void)
-{
-  // Channel 3
-  if(__HAL_TIM_GET_FLAG(&Stepper::htim1, TIM_FLAG_CC3) != RESET && __HAL_TIM_GET_IT_SOURCE(&Stepper::htim1, TIM_IT_CC3) != RESET)
+  // Get Message
+  if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK)
   {
-    Stepper::hitLimit(Stepper::ccw);
-    __HAL_TIM_CLEAR_FLAG(&Stepper::htim1, TIM_FLAG_CC3);
-  }
-  // Channel 4
-  if(__HAL_TIM_GET_FLAG(&Stepper::htim1, TIM_FLAG_CC4) != RESET && __HAL_TIM_GET_IT_SOURCE(&Stepper::htim1, TIM_IT_CC4) != RESET)
-  {
-    Stepper::hitLimit(Stepper::cw);
-    __HAL_TIM_CLEAR_FLAG(&Stepper::htim1, TIM_FLAG_CC4);
+    ERROR("Reception error");
   }
 
+  /* Display LEDx */
+  if ((RxHeader.StdId == 0x1) && (RxHeader.IDE == CAN_ID_STD) && (RxHeader.DLC == 2))
+  {
+
+  }
 }
 
 extern "C" void TIM6_DAC1_IRQHandler()
@@ -51,7 +49,7 @@ void StateMachine::init()
 {
   state = State::Disabled;
   Stepper::enable();
-  //Stepper::setVelocity(-100);
+  Stepper::setVelocity(0.2);
   //setupTimer();
   INFO("State machine initialized");
 }

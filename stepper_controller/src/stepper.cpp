@@ -5,6 +5,7 @@
 
 extern GPIO led2;
 
+
 TIM_HandleTypeDef Stepper::htim1;
 TIM_HandleTypeDef Stepper::htim2;
 GPIO Stepper::l0  = GPIO(STP_L0_GPIO_Port,  STP_L0_Pin);
@@ -20,6 +21,29 @@ float Stepper::velocity_setpoint;
 bool Stepper::zeroed;
 bool Stepper::scanning;
 
+extern "C" void EXTI9_5_IRQHandler()
+{
+  Stepper::zero();
+  __HAL_GPIO_EXTI_CLEAR_FLAG(GPIO_PIN_5);
+  __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_5);
+}
+
+extern "C" void TIM1_CC_IRQHandler(void)
+{
+  // Channel 3
+  if(__HAL_TIM_GET_FLAG(&Stepper::htim1, TIM_FLAG_CC3) != RESET && __HAL_TIM_GET_IT_SOURCE(&Stepper::htim1, TIM_IT_CC3) != RESET)
+  {
+    Stepper::hitLimit(Stepper::ccw);
+    __HAL_TIM_CLEAR_FLAG(&Stepper::htim1, TIM_FLAG_CC3);
+  }
+  // Channel 4
+  if(__HAL_TIM_GET_FLAG(&Stepper::htim1, TIM_FLAG_CC4) != RESET && __HAL_TIM_GET_IT_SOURCE(&Stepper::htim1, TIM_IT_CC4) != RESET)
+  {
+    Stepper::hitLimit(Stepper::cw);
+    __HAL_TIM_CLEAR_FLAG(&Stepper::htim1, TIM_FLAG_CC4);
+  }
+}
+
 void Stepper::init()
 {
   // Initialize GPIO
@@ -34,8 +58,8 @@ void Stepper::init()
   // Initialize state
   zeroed = false;
   scanning = true;
-  max_velocity = 100.0f;
-  velocity_setpoint = 100.0f;
+  max_velocity = 0.5f;
+  velocity_setpoint = 0.0f;
 
   setupTimers();
 
@@ -45,10 +69,7 @@ void Stepper::init()
 void Stepper::enable()
 {
   en.set(GPIO::high);
-  if (HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1) != HAL_OK)
-  {
-    ERROR("Unable to start PWM for timer 2");
-  }
+  setVelocity(0.0f);
 }
 
 void Stepper::disable()
@@ -90,6 +111,16 @@ uint16_t Stepper::getTicks()
   return htim1.Instance->CNT;
 }
 
+int32_t Stepper::convertVelocity(float velocity)
+{
+  if (velocity < 1.0e-3 && velocity > -1.0e-3)
+  {
+    return __INT32_MAX__;
+  }
+  return (int32_t)(320e3f / (velocity * 6400.0f));
+
+}
+
 void Stepper::setVelocity(float velocity)
 {
   // Threshold
@@ -107,16 +138,19 @@ void Stepper::setVelocity(float velocity)
   }
 
   // Set
-  if (std::abs(velocity_setpoint) < 1e-6)
+  uint32_t ivelocity_setpoint = std::abs(convertVelocity(velocity_setpoint));
+  if (std::abs(velocity_setpoint) < 1e-3)
   {
+    htim2.Instance->ARR =  ivelocity_setpoint;
+    htim2.Instance->CCR1 = ivelocity_setpoint/2;
     htim2.Instance->CR1 = htim2.Instance->CR1 & 0xFFFE;
   }
   else
   {
     // TODO some conversion, set direction
     htim2.Instance->CR1 = htim2.Instance->CR1 & 0xFFFE;
-    htim2.Instance->ARR = (uint32_t) std::abs(velocity_setpoint);
-    htim2.Instance->CCR1 = (uint32_t) std::abs(velocity_setpoint/2.0f);
+    htim2.Instance->ARR =  ivelocity_setpoint;
+    htim2.Instance->CCR1 = ivelocity_setpoint/2;
     htim2.Instance->CNT = 0;
     htim2.Instance->CR1 = htim2.Instance->CR1 | 0x0001;
     if (velocity_setpoint > 0.0f)
@@ -240,13 +274,13 @@ void Stepper::setupTimers()
 
   /*
    * Step timer
-   * - TIM2 Base Freq  = 64 MHz
+   * - TIM2 Base Freq  = 32 MHz
    * - Max steps/rev   = 6400 stp/rev (200 bstp * 32 micstp)
-   * - Prescaled base  = 640 kHz (64 MHz / 100)
-   * - Max speed       = 100 rps (64 MHz / 100 / 6400)
+   * - Prescaled base  = 320 kHz (32 MHz / 100)
+   * - Max speed       = 50 rps (32 MHz / 50 / 6400 / 2)
    * - Quanta          = 1.5625e-6 us
    * - Starting rev/s  = 0.1 rev/s
-   * - Starting period = 2000 cc = 640 kHz / (0.1 * 6400) * 2
+   * - Starting period = 500 cc = 320 kHz / (0.1 * 6400)
    */
   {
     TIM_ClockConfigTypeDef sClockSourceConfig = {0};
@@ -254,7 +288,7 @@ void Stepper::setupTimers()
     TIM_OC_InitTypeDef sConfigOC = {0};
 
     htim2.Instance = TIM2;
-    htim2.Init.Prescaler = 100;
+    htim2.Init.Prescaler = 50;
     htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
     //htim2.Init.Period = 20;
     htim2.Init.Period = 100;
@@ -288,6 +322,10 @@ void Stepper::setupTimers()
       ERROR("Unable to configure timer 2 PWM signal");
     }
     HAL_TIM_MspPostInit(&htim2);
+    if (HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1) != HAL_OK)
+    {
+      ERROR("Unable to start PWM for timer 2");
+    }
   }
 }
 

@@ -16,3 +16,10 @@ TEST(convertAngle float->uint16_t)
   ASSERT_EQUAL(Stepper::convertAngle(-0.5f),    0);
   ASSERT_EQUAL(Stepper::convertAngle( 0.5f), 8192);
 }
+
+TEST(convertVelocity float->int32_t)
+{
+  ASSERT_EQUAL(Stepper::convertVelocity(0.0f), __INT32_MAX__);
+  ASSERT_EQUAL(Stepper::convertVelocity(0.1f),   500);
+  ASSERT_EQUAL(Stepper::convertVelocity(-0.1f), -500);
+}

@@ -19,13 +19,6 @@ GPIO led1(LED1_GPIO_Port, LED1_Pin);
 GPIO led2(LED2_GPIO_Port, LED2_Pin);
 //StateMachine state(&htim6, &stepper, &led0);
 
-// Global CAN stuff
-CAN_TxHeaderTypeDef   TxHeader;
-CAN_RxHeaderTypeDef   RxHeader;
-uint8_t               TxData[8];
-uint8_t               RxData[8];
-uint32_t              TxMailbox;
-
 // Helper functions
 extern "C" void MX_USART1_UART_Init(void);     // uart.c
 extern "C" void MX_USART2_UART_Init(void);     // uart.c
@@ -37,23 +30,46 @@ void _putchar(char character)
 {
   ITM_SendChar(character);
 }
+/*
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ * JUST IMPLEMENT SET VELOCITY, GET POSITION AND GET VELOCITY OVER CAN AND WRITE CONTROL SYSTEM ON COMPUTER END
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
 
 
 int main(void)
 
 {
-  // Initialize system
   printf("....\n"); // Sacrifice some periods to the gods of SWD
   HAL_Init();
   SystemClock_Config();
+  INFO("Initialized system");
+
+  Test::runAll();
+  INFO("Ran tests");
+
   MX_CAN_Init();
   GPIO::init();
   Stepper::init();
   StateMachine::init();
-  INFO("Initialized system");
-
-  // Run tests
-  //Test::runAll();
+  INFO("Initialized controller");
 
   while (1);
 }
@@ -61,24 +77,7 @@ int main(void)
 /*
  * Callbacks
  */
-void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
-{
-  // Get Message
-  if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK)
-  {
-    ERROR("Reception error");
-  }
-  led1.toggle();
-  //stepper.setVelocity(100);
 
-
-  /* Display LEDx */
-  if ((RxHeader.StdId == 0x1) && (RxHeader.IDE == CAN_ID_STD) && (RxHeader.DLC == 2))
-  {
-    //LED_Display(RxData[0]);
-    //ubKeyNumber = RxData[0];
-  }
-}
 
 // Default CubeMx error handler
 void Error_Handler()

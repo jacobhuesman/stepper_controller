@@ -22,6 +22,7 @@ public:
   static void step();
   static void zero();
   static void hitLimit(Direction direction);
+  static int32_t convertVelocity(float velocity);
   static void setVelocity(float velocity);
   static bool isZeroed();
   static uint16_t getTicks();
