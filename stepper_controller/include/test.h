@@ -1,10 +1,12 @@
 #ifndef EVAL_H
 #define EVAL_H
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <vector>
 #include <string>
+#include <cmath>
+#include <printf.h>
+
+#include <status.h>
 
 class Test
 {
@@ -67,8 +69,8 @@ private:
 
 // Unit testing framework
 
-#define PASS(FORMAT, ...) printf("    [PASS] " FORMAT, ##__VA_ARGS__);
-#define FAIL(FORMAT, ...) printf("    [FAIL] " FORMAT, ##__VA_ARGS__);
+#define PASS(...) PRINT("    [PASS] ", __VA_ARGS__);
+#define FAIL(...) PRINT("    [FAIL] ", __VA_ARGS__);
 #define ASSERT(ASSERTION)       \
 ({                              \
     bool pass = false;          \
@@ -83,6 +85,38 @@ private:
     }                           \
     *state &= pass;             \
     pass;                       \
+})
+
+#define ASSERT_EQUAL(x, y)            \
+({                                    \
+    bool pass = false;                \
+    if (x == y)                       \
+    {                                 \
+        PASS(#x " == " #y);           \
+        pass = true;                  \
+    }                                 \
+    else                              \
+    {                                 \
+        FAIL("(" #x " = %i) != " #y, x);    \
+    }                                 \
+    *state &= pass;                   \
+    pass;                             \
+})
+
+#define ASSERT_FEQUAL(x, y, tol)    \
+({                                  \
+    bool pass = false;              \
+    if (std::abs(x-y) < tol)        \
+    {                               \
+        PASS(#x " == " #y);         \
+        pass = true;                \
+    }                               \
+    else                            \
+    {                               \
+        FAIL("(" #x " = %f) != " #y, x);  \
+    }                               \
+    *state &= pass;                 \
+    pass;                           \
 })
 
 #define ASSERT_ARRAY_EQ(n,A,B)       \

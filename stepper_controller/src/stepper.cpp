@@ -42,6 +42,143 @@ void Stepper::init()
   INFO("Stepper initialized")
 }
 
+void Stepper::enable()
+{
+  en.set(GPIO::high);
+  if (HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1) != HAL_OK)
+  {
+    ERROR("Unable to start PWM for timer 2");
+  }
+}
+
+void Stepper::disable()
+{
+  en.set(GPIO::low);
+}
+
+void Stepper::set(Direction direction)
+{
+  if (direction == Stepper::cw)
+  {
+    dir.set(GPIO::high);
+  }
+  else if (direction == Stepper::ccw)
+  {
+    dir.set(GPIO::low);
+  }
+}
+
+
+bool Stepper::isZeroed()
+{
+  return zeroed;
+}
+
+void Stepper::zero()
+{
+  if (!zeroed)
+  {
+    setLimit(Stepper::ccw,-0.5f);
+    setLimit(Stepper::cw,  0.5f);
+    zeroed = true;
+  }
+  htim1.Instance->CNT = TICKS_PER_REV / 2;
+}
+
+uint16_t Stepper::getTicks()
+{
+  return htim1.Instance->CNT;
+}
+
+void Stepper::setVelocity(float velocity)
+{
+  // Threshold
+  if (velocity > max_velocity)
+  {
+    velocity_setpoint = max_velocity;
+  }
+  else if (velocity < -max_velocity)
+  {
+    velocity_setpoint = -max_velocity;
+  }
+  else
+  {
+    velocity_setpoint = velocity;
+  }
+
+  // Set
+  if (std::abs(velocity_setpoint) < 1e-6)
+  {
+    htim2.Instance->CR1 = htim2.Instance->CR1 & 0xFFFE;
+  }
+  else
+  {
+    // TODO some conversion, set direction
+    htim2.Instance->CR1 = htim2.Instance->CR1 & 0xFFFE;
+    htim2.Instance->ARR = (uint32_t) std::abs(velocity_setpoint);
+    htim2.Instance->CCR1 = (uint32_t) std::abs(velocity_setpoint/2.0f);
+    htim2.Instance->CNT = 0;
+    htim2.Instance->CR1 = htim2.Instance->CR1 | 0x0001;
+    if (velocity_setpoint > 0.0f)
+    {
+      set(Stepper::cw);
+    }
+    else
+    {
+      set(Stepper::ccw);
+    }
+
+  }
+}
+
+float Stepper::convertAngle(uint16_t tics)
+{
+  return (float)tics / TICKS_PER_REV - 0.5f;
+}
+uint16_t Stepper::convertAngle(float angle)
+{
+  return (uint16_t)((angle + 0.5f) * TICKS_PER_REV);
+}
+
+void Stepper::setLimit(Direction direction, float angle)
+{
+  if (direction == Stepper::ccw)
+  {
+    htim1.Instance->CCR3 = convertAngle(angle);
+  }
+  else
+  {
+    htim1.Instance->CCR4 = convertAngle(angle);
+  }
+}
+
+void Stepper::hitLimit(Direction direction)
+{
+  if (scanning)
+  {
+    if (direction == Stepper::cw)
+    {
+      if (velocity_setpoint >= 0)
+      {
+        setVelocity(-velocity_setpoint);
+        led2.set(GPIO::high);
+      }
+    }
+    else
+    {
+      if (velocity_setpoint < 0)
+      {
+        setVelocity(-velocity_setpoint);
+        led2.set(GPIO::low);
+      }
+    }
+  }
+  else
+  {
+    setVelocity(0.0f);
+  }
+}
+
 void Stepper::setupTimers()
 {
   // Initialize encoder timer
@@ -187,141 +324,4 @@ void Stepper::setupGPIO()
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-}
-
-void Stepper::enable()
-{
-  en.set(GPIO::high);
-  if (HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1) != HAL_OK)
-  {
-    ERROR("Unable to start PWM for timer 2");
-  }
-}
-
-void Stepper::disable()
-{
-  en.set(GPIO::low);
-}
-
-void Stepper::set(Direction direction)
-{
-  if (direction == Stepper::cw)
-  {
-    dir.set(GPIO::high);
-  }
-  else if (direction == Stepper::ccw)
-  {
-    dir.set(GPIO::low);
-  }
-}
-
-
-bool Stepper::isZeroed()
-{
-  return zeroed;
-}
-
-void Stepper::zero()
-{
-  if (!zeroed)
-  {
-    htim1.Instance->CCR3 = TICKS_PER_REV/8;
-    htim1.Instance->CCR4 = TICKS_PER_REV;
-    zeroed = true;
-  }
-  htim1.Instance->CNT = TICKS_PER_REV / 2;
-}
-
-uint16_t Stepper::getTicks()
-{
-  return htim1.Instance->CNT;
-}
-
-void Stepper::setVelocity(float velocity)
-{
-  // Threshold
-  if (velocity > max_velocity)
-  {
-    velocity_setpoint = max_velocity;
-  }
-  else if (velocity < -max_velocity)
-  {
-    velocity_setpoint = -max_velocity;
-  }
-  else
-  {
-    velocity_setpoint = velocity;
-  }
-
-  // Set
-  if (std::abs(velocity_setpoint) < 1e-6)
-  {
-    htim2.Instance->CR1 = htim2.Instance->CR1 & 0xFFFE;
-  }
-  else
-  {
-    // TODO some conversion, set direction
-    htim2.Instance->CR1 = htim2.Instance->CR1 & 0xFFFE;
-    htim2.Instance->ARR = (uint32_t) std::abs(velocity_setpoint);
-    htim2.Instance->CCR1 = (uint32_t) std::abs(velocity_setpoint/2.0f);
-    htim2.Instance->CNT = 0;
-    htim2.Instance->CR1 = htim2.Instance->CR1 | 0x0001;
-    if (velocity_setpoint > 0.0f)
-    {
-      set(Stepper::cw);
-    }
-    else
-    {
-      set(Stepper::ccw);
-    }
-
-  }
-}
-
-float convertAngle(uint16_t tics)
-{
-  return (float)tics * TICKS_PER_REV - 0.5f;
-}
-uint16_t convertAngle(float angle)
-{
-  return (uint16_t)((angle + 0.5f) / TICKS_PER_REV);
-}
-
-void Stepper::setLimit(Direction direction, float velocity)
-{
-  if (direction == Stepper::cw)
-  {
-
-  }
-  else
-  {
-
-  }
-}
-
-void Stepper::hitLimit(Direction direction)
-{
-  if (scanning)
-  {
-    if (direction == Stepper::cw)
-    {
-      if (velocity_setpoint >= 0)
-      {
-        setVelocity(-velocity_setpoint);
-        led2.set(GPIO::high);
-      }
-    }
-    else
-    {
-      if (velocity_setpoint < 0)
-      {
-        setVelocity(-velocity_setpoint);
-        led2.set(GPIO::low);
-      }
-    }
-  }
-  else
-  {
-    setVelocity(0.0f);
-  }
 }

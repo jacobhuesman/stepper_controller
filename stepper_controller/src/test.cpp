@@ -55,7 +55,7 @@ bool Test::run()
 
 bool Test::runAll()
 {
-  printf("\n[TEST ALL] Running...\n");
+  printf("\n[TEST ALL]\n");
   uint32_t passed = 0;
   for (uint32_t i = 0; i < Test::suites_size; i++)
   {
@@ -79,6 +79,7 @@ bool Test::runAll()
   }
   else
   {
+
     return false;
   }
 }

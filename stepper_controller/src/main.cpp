@@ -5,6 +5,7 @@
 
 #include <test.h>
 #include <tests/stepper_tests.h>
+#include <tests/sanity_tests.h>
 
 // HAL handles
 ADC_HandleTypeDef hadc1;
@@ -32,14 +33,11 @@ extern "C" void MX_CAN_Init(void);             // can.c
 extern "C" void SystemClock_Config(void);      // clocks.c
 void errorHandler(std::exception &e);
 
-TEST_SUITE(main)
-TEST(Space Name)
+void _putchar(char character)
 {
+  ITM_SendChar(character);
 }
 
-TEST(2)
-{
-}
 
 int main(void)
 
@@ -48,15 +46,14 @@ int main(void)
   printf("....\n"); // Sacrifice some periods to the gods of SWD
   HAL_Init();
   SystemClock_Config();
-  //test_test1.test();
-  //MX_CAN_Init();
-  //GPIO::init();
-  //Stepper::init();
-  //StateMachine::init();
+  MX_CAN_Init();
+  GPIO::init();
+  Stepper::init();
+  StateMachine::init();
   INFO("Initialized system");
 
   // Run tests
-  Test::runAll();
+  //Test::runAll();
 
   while (1);
 }
