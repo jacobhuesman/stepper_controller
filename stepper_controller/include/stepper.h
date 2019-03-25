@@ -30,6 +30,9 @@ public:
   static float convertAngle(uint16_t tics);
   static uint16_t convertAngle(float value);
   static float convertVelocityTics(uint16_t tics);
+  static void setScan(bool value);
+  static bool initialized();
+  static float getVelocitySetPoint();
 
   static TIM_HandleTypeDef htim1, htim2;
 
@@ -37,6 +40,8 @@ private:
   static GPIO l0, l1, dm0, dm1, dm2, rst, dir, en;
   static float velocity_setpoint, max_velocity; // rev/s
   static bool zeroed, scanning;
+  static int32_t at_limit; // =0 not at limit, <0 ccw limit, >0 cw limit
+  static uint32_t limit_count;
 };
 
 #endif // STEPPER_H

@@ -44,9 +44,9 @@ void MX_CAN_Init(void)
   sFilterConfig.FilterBank = 0;
   sFilterConfig.FilterMode = CAN_FILTERMODE_IDMASK;
   sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT;
-  sFilterConfig.FilterIdHigh = 1 << 5;
+  sFilterConfig.FilterIdHigh = 1 << 5; // See page 1022 of reference manual
   sFilterConfig.FilterIdLow = 0x0000;
-  sFilterConfig.FilterMaskIdHigh = 0x3F << 5;  // [0:5] ID
+  sFilterConfig.FilterMaskIdHigh = 0b1111 << 5;  // [0:3] ID
   sFilterConfig.FilterMaskIdLow = 0x0000;
   sFilterConfig.FilterFIFOAssignment = CAN_RX_FIFO0;
   sFilterConfig.FilterActivation = ENABLE;

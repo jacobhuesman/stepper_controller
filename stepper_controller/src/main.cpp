@@ -1,8 +1,7 @@
+#include <controller.h>
 #include <status.h>
 #include <main.h>
 #include <stepper.h>
-#include <state_machine.h>
-
 #include <test.h>
 #include <tests/stepper_tests.h>
 #include <tests/sanity_tests.h>
@@ -55,7 +54,6 @@ void _putchar(char character)
 
 
 int main(void)
-
 {
   printf("....\n"); // Sacrifice some periods to the gods of SWD
   HAL_Init();
@@ -68,7 +66,7 @@ int main(void)
   MX_CAN_Init();
   GPIO::init();
   Stepper::init();
-  StateMachine::init();
+  Controller::init();
   INFO("Initialized controller");
 
   while (1);
