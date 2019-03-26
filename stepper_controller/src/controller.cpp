@@ -1,6 +1,7 @@
 #include <stdexcept>
 #include <string.h>
 
+#include <printf.h>
 #include <status.h>
 #include <config.h>
 #include <controller.h>
@@ -53,24 +54,28 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
         Stepper::setScan(false);
         Stepper::disable();
         Stepper::setVelocity(0.0f);
+        INFO("Disabling stepper")
         break;
       case Mode::Initialize :
         Controller::setMode(mode);
         Stepper::setScan(true);
         Stepper::enable();
         Stepper::setVelocity(set_point);
+        INFO("Controller initialized")
         break;
       case Mode::Scan :
         Controller::setMode(mode);
         Stepper::setScan(true);
         Stepper::enable();
         Stepper::setVelocity(set_point);
+        INFO("Starting scan")
         break;
       case Mode::Velocity :
         Controller::setMode(mode);
         Stepper::setScan(false);
         Stepper::enable();
         Stepper::setVelocity(set_point);
+        INFO("[Changing to velocity mode")
         break;
       default :
         ERROR("Invalid mode");
@@ -78,11 +83,12 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
         Stepper::setScan(false);
         Stepper::disable();
         Stepper::setVelocity(0.0f);
+        INFO("Invalid mode, disabling stepper")
         return;
       }
       break;
     }
-    case MessageType::RequestState : // TODO add additional modes
+    case MessageType::RequestState :
     {
       float position = Stepper::convertAngle(Stepper::getTicks());
       float velocity = Stepper::getVelocitySetPoint();
@@ -100,6 +106,21 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
         ERROR("Unable to send CAN message");
       }
       INFO("Sent state");
+      break;
+    }
+    case MessageType::SetPoint :
+    {
+      float set_point;
+      memcpy(&set_point, &RxData[0], 4);
+      if (Controller::getMode() == Mode::Velocity)
+      {
+        Stepper::setVelocity(set_point);
+        INFO("Setting velocity to: %f", set_point);
+      }
+      else
+      {
+        WARN("Other control modes not implemented");
+      }
       break;
     }
     default :

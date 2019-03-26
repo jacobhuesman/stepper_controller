@@ -20,7 +20,7 @@ float Stepper::max_velocity;
 float Stepper::velocity_setpoint;
 bool Stepper::zeroed;
 bool Stepper::scanning;
-int32_t Stepper::at_limit;
+Stepper::Direction Stepper::active_limit;
 uint32_t Stepper::limit_count;
 
 extern "C" void EXTI9_5_IRQHandler()
@@ -60,12 +60,12 @@ void Stepper::init()
   rst.set(GPIO::low);
 
   // Initialize state
-  at_limit = 0;
   zeroed = false;
   scanning = true;
   max_velocity = 0.5f;
   velocity_setpoint = 0.0f;
   limit_count = 0;
+  active_limit = Direction::none;
 
   setupTimers();
 
@@ -148,13 +148,9 @@ void Stepper::setVelocity(float velocity)
     velocity_setpoint = velocity;
   }
 
-  if ((velocity_setpoint > 0 && at_limit > 0) || (velocity_setpoint < 0 && at_limit < 0))
+  if ((velocity_setpoint > 0 && active_limit == Direction::cw) || (velocity_setpoint < 0 && active_limit == Direction::ccw))
   {
     velocity_setpoint = 0.0f;
-  }
-  else
-  {
-    at_limit = 0;
   }
 
   // Set
@@ -168,13 +164,6 @@ void Stepper::setVelocity(float velocity)
   }
   else
   {
-
-    // TODO some conversion, set direction
-    htim2.Instance->CR1 = htim2.Instance->CR1 & 0xFFFE;
-    htim2.Instance->ARR =  ivelocity_setpoint;
-    htim2.Instance->CCR1 = ivelocity_setpoint/2;
-    htim2.Instance->CNT = 0;
-    htim2.Instance->CR1 = htim2.Instance->CR1 | 0x0001;
     if (velocity_setpoint > 0.0f)
     {
       set(Stepper::cw);
@@ -184,6 +173,14 @@ void Stepper::setVelocity(float velocity)
       set(Stepper::ccw);
     }
 
+    active_limit = Direction::none;
+
+    // TODO some conversion, set direction
+    //htim2.Instance->CR1 = htim2.Instance->CR1 & 0xFFFE;
+    htim2.Instance->CNT = 0;
+    htim2.Instance->ARR =  ivelocity_setpoint;
+    htim2.Instance->CCR1 = ivelocity_setpoint/2;
+    htim2.Instance->CR1 = htim2.Instance->CR1 | 0x0001;
   }
 }
 
@@ -221,37 +218,35 @@ float Stepper::getVelocitySetPoint()
 
 void Stepper::hitLimit(Direction direction)
 {
-  if (scanning)
+  if (direction == Stepper::cw)
   {
-    if (direction == Stepper::cw)
+    if (velocity_setpoint >= 1e-3)
     {
-      if (velocity_setpoint >= 0)
+      if (scanning)
       {
         limit_count++;
         setVelocity(-velocity_setpoint);
         led2.set(GPIO::high);
       }
-    }
-    else
-    {
-      if (velocity_setpoint < 0)
+      else
       {
-        limit_count++;
-        setVelocity(-velocity_setpoint);
-        led2.set(GPIO::low);
+        setVelocity(0.0f);
+        active_limit = direction;
       }
     }
   }
   else
   {
-    setVelocity(0.0f);
-    if (direction == Stepper::cw)
+    if (velocity_setpoint <= -1e-3)
     {
-      at_limit = 1;
+      limit_count++;
+      setVelocity(-velocity_setpoint);
+      led2.set(GPIO::low);
     }
     else
     {
-      at_limit = 0;
+      setVelocity(0.0f);
+      active_limit = direction;
     }
   }
 }
