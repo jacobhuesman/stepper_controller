@@ -20,6 +20,8 @@ uint8_t               TxData[8];
 uint8_t               RxData[8];
 uint32_t              TxMailbox;
 
+typedef Stepper::Direction Direction;
+
 /*
  * Interrupt handlers
  */
@@ -44,8 +46,9 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
       memcpy(&set_point, &RxData[1], 4);
       if (!Stepper::initialized() && mode != Mode::Initialize)
       {
-        mode = Mode::Disabled;
+        //mode = Mode::Disabled;
         WARN("Must initialize first");
+        break;
       }
       switch (mode)
       {
@@ -64,26 +67,26 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
         INFO("Controller initialized")
         break;
       case Mode::Scan :
-        Controller::setMode(mode);
-        Stepper::setScan(true);
-        Stepper::enable();
-        Stepper::setVelocity(set_point);
-        INFO("Starting scan")
-        break;
       case Mode::Velocity :
-        Controller::setMode(mode);
-        Stepper::setScan(false);
-        Stepper::enable();
-        Stepper::setVelocity(set_point);
-        INFO("[Changing to velocity mode")
+        if (mode != Controller::getMode())
+        {
+          Controller::setMode(mode);
+          Stepper::setScan(mode == Mode::Scan);
+          Stepper::enable();
+          Stepper::setVelocity(set_point);
+        }
+        else if (mode == Mode::Velocity)
+        {
+          Stepper::setVelocity(set_point);
+        }
         break;
       default :
         ERROR("Invalid mode");
-        Controller::setMode(Mode::Disabled);
+        /*Controller::setMode(Mode::Disabled);
         Stepper::setScan(false);
         Stepper::disable();
         Stepper::setVelocity(0.0f);
-        INFO("Invalid mode, disabling stepper")
+        INFO("Invalid mode, disabling stepper")*/
         return;
       }
       break;
@@ -215,6 +218,9 @@ void Controller::update()
       Stepper::setScan(false);
       Stepper::disable();
       Stepper::setVelocity(0.0f);
+      Stepper::max_velocity = 0.15f;
+      Stepper::setLimit(Direction::cw, 0.5);
+      Stepper::setLimit(Direction::ccw, -0.4);
     }
     break;
   }

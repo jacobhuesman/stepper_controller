@@ -20,6 +20,7 @@ public:
   static void disable();
   static void set(Direction direction);
   static void setLimit(Direction direction, float angle);
+  static float getLimit(Direction direction);
   static void step();
   static void zero();
   static void hitLimit(Direction direction);
@@ -27,6 +28,7 @@ public:
   static void setVelocity(float velocity);
   static bool isZeroed();
   static uint16_t getTicks();
+  static float getAngle();
   static float velocitySetpoint();
   static float convertAngle(uint16_t tics);
   static uint16_t convertAngle(float value);
@@ -36,13 +38,15 @@ public:
   static float getVelocitySetPoint();
 
   static TIM_HandleTypeDef htim1, htim2;
+  static Direction active_limit;
+  static float max_velocity;
 
 private:
   static GPIO l0, l1, dm0, dm1, dm2, rst, dir, en;
-  static float velocity_setpoint, max_velocity; // rev/s
+  static float velocity_setpoint; // rev/s
   static bool zeroed, scanning;
-  static Direction active_limit;
   static uint32_t limit_count;
+  static float cw_limit, ccw_limit;
 };
 
 #endif // STEPPER_H
